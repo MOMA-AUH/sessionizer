@@ -77,9 +77,9 @@ class DataTrack:
         return ET.SubElement(parent_elem, "Resource", name=self.name, path=self.path)
 
     # Method for adding track to IGV session
-    def add_track(self, parent_elem):
+    def add_track(self, session_panel: ET.Element):
         track_elem = ET.SubElement(
-            parent_elem,
+            session_panel,
             "Track",
             name=self.name,
             id=os.path.basename(self.path),
@@ -95,8 +95,8 @@ class BamTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
 
-    def add_track(self, parent_elem):
-        track_elem = super().add_track(parent_elem)
+    def add_track(self, session_panel: ET.Element):
+        track_elem = super().add_track(session_panel)
 
         # Add attributes for BAM track
         track_elem.set("groupBy", str(self.group_by))
@@ -145,9 +145,9 @@ class BigWigTrack(DataTrack):
                 raise ValueError(f"Invalid range: {self.range}. Should be min,max or min,mid,max.")
 
     # Method for adding track to IGV session
-    def add_track(self, parent_elem):
+    def add_track(self, session_panel: ET.Element):
         # Create track element using super class method
-        track_elem = super().add_track(parent_elem)
+        track_elem = super().add_track(session_panel)
 
         # Add attributes for BigWig track
         if self.color is not None and RGB_COLOR_DICT[self.color]:
