@@ -1,5 +1,6 @@
 # Build package from git
-conda build . --output-folder build/
+BUILD_DIR="/faststorage/project/MomaReference/BACKUP/nanopore/software/conda"
+conda build . --output-folder $BUILD_DIR
 
-#  Clean up
+# Clean up
 conda build purge
