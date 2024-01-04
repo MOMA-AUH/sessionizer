@@ -1,0 +1,22 @@
+{% set name = "sessionizer" %}
+{% set version = "0.1.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  git_rev: v{{ version }}
+  git_url: git@github.com:MOMA-AUH/sessionizer.git
+
+build:
+  noarch: python
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+  number: 0
+
+requirements:
+  host:
+    - pip
+    - python >=3.10
+  run:
+    - python >=3.10
