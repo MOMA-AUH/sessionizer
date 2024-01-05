@@ -46,6 +46,9 @@ def create_igv_session(
     if use_relative_paths:
         files = [os.path.relpath(path=file, start=os.path.dirname(output)) for file in files]
 
+        if genome_path:
+            genome_path = os.path.relpath(path=genome_path, start=os.path.dirname(output))
+
     if not names:
         # If names list is not provided, set it to the file name
         names = [os.path.basename(file) for file in files]
