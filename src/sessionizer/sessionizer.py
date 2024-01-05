@@ -135,7 +135,7 @@ def create_igv_session(
             )
 
         # Handle BigWig specific arguments
-        if file.endswith(".bw"):
+        elif file.endswith(".bw"):
             tracks.append(
                 BigWigTrack(
                     name=name,
