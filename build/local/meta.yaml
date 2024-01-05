@@ -1,5 +1,6 @@
 {% set name = "sessionizer" %}
-{% set version = load_setup_py_data().version %}
+{% set version = "0.1.1" %}
+{% set build_number = 0 %}
 
 package:
   name: {{ name|lower }}
@@ -11,7 +12,7 @@ source:
 build:
   noarch: python
   script: "{{ PYTHON }} -m pip install . --no-deps -vv"
-  number: 0
+  number: "{{ build_number }}"
 
 requirements:
   host:
