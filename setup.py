@@ -5,7 +5,7 @@ setup(
     version="0.1.3",
     packages=find_packages("src"),
     package_dir={"": "src"},
-    entry_points={"console_scripts": ["sessionizer = sessionizer.sessionizer:main"]},
+    entry_points={"console_scripts": ["sessionizer = sessionizer.main:run"]},
     python_requires=">=3.10",
     author="Simon Opstrup Drue",
     author_email="simondrue@gmail.com",
