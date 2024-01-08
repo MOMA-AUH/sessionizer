@@ -94,8 +94,27 @@ class DataTrack:
 class BamTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
+    show_coverage: bool
+    show_junctions: bool
 
     def add_track(self, session_panel: ET.Element):
+        # Add coverage track
+        ET.SubElement(
+            session_panel,
+            "Track",
+            id=os.path.basename(self.path) + "_coverage",
+            visible=str(self.show_coverage).lower(),
+        )
+
+        # Add junctions track
+        ET.SubElement(
+            session_panel,
+            "Track",
+            id=os.path.basename(self.path) + "_junctions",
+            visible=str(self.show_junctions).lower(),
+        )
+
+        # Add alligment track
         track_elem = super().add_track(session_panel)
 
         # Add attributes for BAM track

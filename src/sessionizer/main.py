@@ -8,7 +8,7 @@ from xml.dom import minidom
 
 from sessionizer.colors import RGB_COLOR_DICT
 from sessionizer.track_elements import AllignmentColorByOption, AllignmentGroupByOption, BamTrack, BigWigRendererEnum, BigWigTrack, DataTrack
-from sessionizer.utils import generate_symlink
+from sessionizer.utils import generate_symlink, hanlde_attribute
 
 GENOMES = {
     "hg19": "hg19",
@@ -23,6 +23,8 @@ def create_igv_session(
     heights: List[int | None],
     bam_group_by: List[AllignmentGroupByOption],
     bam_color_by: List[AllignmentColorByOption],
+    bam_show_coverage: List[bool],
+    bam_show_junctions: List[bool],
     bw_ranges: List[str | None],
     bw_color: List[str | None],
     bw_negative_color: List[str | None],
@@ -66,23 +68,10 @@ def create_igv_session(
     # Hanlde bam/cram specific arguments
     alignment_files = [file for file in files if file.endswith(".bam") or file.endswith(".cram")]
     if alignment_files:
-        # Check if the length of bam_group_by and bam_color_by lists are 1 or equal to the number of bams
-        if bam_group_by:
-            if len(bam_group_by) != len(alignment_files) and len(bam_group_by) != 1:
-                raise ValueError(f"Length of bam_group_by ({len(bam_group_by)}) must be 1 or equal to the number of bams ({len(alignment_files)}).")
-            if len(bam_group_by) == 1:
-                bam_group_by = bam_group_by * len(alignment_files)
-        else:
-            bam_group_by = [AllignmentGroupByOption.NONE] * len(alignment_files)
-
-        # If only 1 group_by_phase or color_by_methylation are provided, set them to the same value
-        if bam_color_by:
-            if len(bam_color_by) != len(alignment_files) and len(bam_color_by) != 1:
-                raise ValueError(f"Length of bam_color_by ({len(bam_color_by)}) must be 1 or equal to the number of bams ({len(alignment_files)}).")
-            if len(bam_color_by) == 1:
-                bam_color_by = bam_color_by * len(alignment_files)
-        else:
-            bam_color_by = [AllignmentColorByOption.NONE] * len(alignment_files)
+        bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
+        bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
+        bam_show_coverage = hanlde_attribute("bam_show_coverage", bam_show_coverage, alignment_files, "alignment files")
+        bam_show_junctions = hanlde_attribute("bam_show_junctions", bam_show_junctions, alignment_files, "alignment files")
 
         # If group_by_phase and color_by_methylation are not provided, set them to False
 
@@ -95,24 +84,15 @@ def create_igv_session(
                 if bw_range and not re.match(r"^\d+(\.\d+)?,\d+(\.\d+)?(,\d+(\.\d+)?)?$", bw_range):
                     raise ValueError(f"The bw_range {bw_range} does not fit the pattern float,float (min,max) or float,float,float (min,mid,max).")
 
-        def check_list_length(lst, expected_length, variable_name):
-            if len(lst) != expected_length and len(lst) != 1:
-                raise ValueError(f"Length of {variable_name}, ({len(lst)}) must be 1 or equal to the number of bigwig files ({expected_length}).")
-
-        check_list_length(bw_color, len(bigwig_files), "bw_color")
-        check_list_length(bw_negative_color, len(bigwig_files), "bw_negative_color")
-        check_list_length(bw_plot_type, len(bigwig_files), "bw_plot_type")
-
-        if bw_color and len(bw_color) == 1:
-            bw_color = bw_color * len(bigwig_files)
-        if bw_negative_color and len(bw_negative_color) == 1:
-            bw_negative_color = bw_negative_color * len(bigwig_files)
-        if bw_plot_type and len(bw_plot_type) == 1:
-            bw_plot_type = bw_plot_type * len(bigwig_files)
+        bw_color = hanlde_attribute("bw_color", bw_color, bigwig_files, "bigwig files")
+        bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
+        bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
 
     # Cycles for sublists
     bam_group_by_cycle = cycle(bam_group_by)
     bam_color_by_cycle = cycle(bam_color_by)
+    bam_show_coverage_cycle = cycle(bam_show_coverage)
+    bam_show_junctions_cycle = cycle(bam_show_junctions)
 
     bw_ranges_cycle = cycle(bw_ranges)
     bw_color_cycle = cycle(bw_color)
@@ -131,6 +111,8 @@ def create_igv_session(
                     height=height,
                     group_by=next(bam_group_by_cycle),
                     color_by=next(bam_color_by_cycle),
+                    show_coverage=next(bam_show_coverage_cycle),
+                    show_junctions=next(bam_show_junctions_cycle),
                 )
             )
 
@@ -228,7 +210,7 @@ def create_igv_session(
         output_file.write(xml_str)
 
 
-def main():
+def run():
     parser = argparse.ArgumentParser(
         description="""
         Easy way to create an IGV session file in XML format.
@@ -270,6 +252,20 @@ def main():
         type=AllignmentColorByOption,
         default=[AllignmentColorByOption.NONE],
         help="Parameter to color bams by. Either single value (shared) or multiple values (per bam).",
+    )
+    parser.add_argument(
+        "--bam_show_coverage",
+        nargs="+",
+        type=bool,
+        default=[False],
+        help="Parameter to show coverage on bam tracks.",
+    )
+    parser.add_argument(
+        "--bam_show_junctions",
+        nargs="+",
+        type=bool,
+        default=[False],
+        help="Parameter to show junctions on bam tracks.",
     )
 
     # BigWig options
@@ -345,6 +341,8 @@ def main():
         # BAM arguments
         bam_group_by=args.bam_group_by,
         bam_color_by=args.bam_color_by,
+        bam_show_coverage=args.bam_show_coverage,
+        bam_show_junctions=args.bam_show_junctions,
         # BigWig arguments
         bw_ranges=args.bw_ranges,
         bw_color=args.bw_color,
@@ -358,7 +356,3 @@ def main():
         use_relative_paths=args.use_relative_paths,
         generate_symlinks=args.generate_symlinks,
     )
-
-
-if __name__ == "__main__":
-    main()

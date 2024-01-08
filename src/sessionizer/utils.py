@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 FILE_INDEX_EXTENSIONS = {
     "bam": ".bai",
@@ -25,3 +26,11 @@ def generate_symlink(shortcut_dir, file):
             os.symlink(file_index, file_index_symlink)
 
     return symlink
+
+
+def hanlde_attribute(attribute: str, values: List, files: List, file_type: str) -> List:
+    if len(values) != len(files) and len(values) != 1:
+        raise ValueError(f"Length of {attribute} ({len(values)}) must be 1 or equal to the number of {file_type} ({len(files)}).")
+    if len(values) == 1:
+        return values * len(files)
+    return values
