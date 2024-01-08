@@ -50,6 +50,15 @@ class AllignmentColorByOption(Enum):
         return self.value
 
 
+class AllignmentDisplayMode(Enum):
+    EXPANDED = "expanded"
+    COLLAPSED = "collapsed"
+    SQUISHED = "squished"
+
+    def __str__(self):
+        return self.value
+
+
 class BigWigRendererEnum(Enum):
     # IGVNAME = "toolname"
     LINE_PLOT = "line"
@@ -94,6 +103,7 @@ class DataTrack:
 class BamTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
+    displayMode: AllignmentDisplayMode
     show_coverage: bool
     show_junctions: bool
 
@@ -120,6 +130,8 @@ class BamTrack(DataTrack):
         # Add attributes for BAM track
         track_elem.set("groupBy", str(self.group_by))
         track_elem.set("colorBy", str(self.color_by))
+        track_elem.set("displayMode", str(self.displayMode))
+
         return track_elem
 
 

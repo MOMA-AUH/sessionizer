@@ -7,7 +7,15 @@ from typing import List
 from xml.dom import minidom
 
 from sessionizer.colors import RGB_COLOR_DICT
-from sessionizer.track_elements import AllignmentColorByOption, AllignmentGroupByOption, BamTrack, BigWigRendererEnum, BigWigTrack, DataTrack
+from sessionizer.track_elements import (
+    AllignmentColorByOption,
+    AllignmentDisplayMode,
+    AllignmentGroupByOption,
+    BamTrack,
+    BigWigRendererEnum,
+    BigWigTrack,
+    DataTrack,
+)
 from sessionizer.utils import generate_symlink, hanlde_attribute
 
 GENOMES = {
@@ -23,6 +31,7 @@ def create_igv_session(
     heights: List[int | None],
     bam_group_by: List[AllignmentGroupByOption],
     bam_color_by: List[AllignmentColorByOption],
+    bam_display_mode: List[AllignmentDisplayMode],
     bam_show_coverage: List[bool],
     bam_show_junctions: List[bool],
     bw_ranges: List[str | None],
@@ -70,6 +79,7 @@ def create_igv_session(
     if alignment_files:
         bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
         bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
+        bam_display_mode = hanlde_attribute("bam_display_mode", bam_display_mode, alignment_files, "alignment files")
         bam_show_coverage = hanlde_attribute("bam_show_coverage", bam_show_coverage, alignment_files, "alignment files")
         bam_show_junctions = hanlde_attribute("bam_show_junctions", bam_show_junctions, alignment_files, "alignment files")
 
@@ -91,6 +101,7 @@ def create_igv_session(
     # Cycles for sublists
     bam_group_by_cycle = cycle(bam_group_by)
     bam_color_by_cycle = cycle(bam_color_by)
+    bam_display_mode_cycle = cycle(bam_display_mode)
     bam_show_coverage_cycle = cycle(bam_show_coverage)
     bam_show_junctions_cycle = cycle(bam_show_junctions)
 
@@ -111,6 +122,7 @@ def create_igv_session(
                     height=height,
                     group_by=next(bam_group_by_cycle),
                     color_by=next(bam_color_by_cycle),
+                    displayMode=next(bam_display_mode_cycle),
                     show_coverage=next(bam_show_coverage_cycle),
                     show_junctions=next(bam_show_junctions_cycle),
                 )
@@ -254,6 +266,14 @@ def run():
         help="Parameter to color bams by. Either single value (shared) or multiple values (per bam).",
     )
     parser.add_argument(
+        "--bam_display_mode",
+        nargs="+",
+        choices=list(AllignmentDisplayMode),
+        type=AllignmentDisplayMode,
+        default=[AllignmentDisplayMode.COLLAPSED],
+        help="Parameter to display bams by. Either single value (shared) or multiple values (per bam).",
+    )
+    parser.add_argument(
         "--bam_show_coverage",
         nargs="+",
         type=bool,
@@ -341,6 +361,7 @@ def run():
         # BAM arguments
         bam_group_by=args.bam_group_by,
         bam_color_by=args.bam_color_by,
+        bam_display_mode=args.bam_display_mode,
         bam_show_coverage=args.bam_show_coverage,
         bam_show_junctions=args.bam_show_junctions,
         # BigWig arguments
