@@ -103,7 +103,7 @@ class DataTrack:
 class BamTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
-    displayMode: AllignmentDisplayMode
+    display_mode: AllignmentDisplayMode
     show_coverage: bool
     show_junctions: bool
 
@@ -128,9 +128,9 @@ class BamTrack(DataTrack):
         track_elem = super().add_track(session_panel)
 
         # Add attributes for BAM track
-        track_elem.set("groupBy", str(self.group_by))
-        track_elem.set("colorBy", str(self.color_by))
-        track_elem.set("displayMode", str(self.displayMode))
+        track_elem.set("groupBy", str(self.group_by.name))
+        track_elem.set("colorBy", str(self.color_by.name))
+        track_elem.set("displayMode", str(self.display_mode.name))
 
         return track_elem
 

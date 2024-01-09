@@ -1,12 +1,12 @@
 import argparse
 import os
 import re
-import xml.etree.ElementTree as ET
 from itertools import cycle
 from typing import List
-from xml.dom import minidom
 
 from sessionizer.colors import RGB_COLOR_DICT
+from sessionizer.create_session import create_igv_session_xml
+from sessionizer.genomes import GENOMES
 from sessionizer.track_elements import (
     AllignmentColorByOption,
     AllignmentDisplayMode,
@@ -17,12 +17,6 @@ from sessionizer.track_elements import (
     DataTrack,
 )
 from sessionizer.utils import generate_symlink, hanlde_attribute
-
-GENOMES = {
-    "hg19": "hg19",
-    "hg38": "hg38",
-    "t2t": "chm13v2.0",
-}
 
 
 def create_igv_session(
@@ -98,13 +92,15 @@ def create_igv_session(
         bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
         bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
 
-    # Cycles for sublists
+    # Cycles for attribute sublists
+    # Allignment files
     bam_group_by_cycle = cycle(bam_group_by)
     bam_color_by_cycle = cycle(bam_color_by)
     bam_display_mode_cycle = cycle(bam_display_mode)
     bam_show_coverage_cycle = cycle(bam_show_coverage)
     bam_show_junctions_cycle = cycle(bam_show_junctions)
 
+    # Bigwig files
     bw_ranges_cycle = cycle(bw_ranges)
     bw_color_cycle = cycle(bw_color)
     bw_negative_color_cycle = cycle(bw_negative_color)
@@ -122,7 +118,7 @@ def create_igv_session(
                     height=height,
                     group_by=next(bam_group_by_cycle),
                     color_by=next(bam_color_by_cycle),
-                    displayMode=next(bam_display_mode_cycle),
+                    display_mode=next(bam_display_mode_cycle),
                     show_coverage=next(bam_show_coverage_cycle),
                     show_junctions=next(bam_show_junctions_cycle),
                 )
@@ -152,70 +148,7 @@ def create_igv_session(
             )
 
     # Create the root element
-    root = ET.Element("Session")
-
-    # Add genome information
-    if genome in GENOMES:
-        root.set("genome", GENOMES[genome])
-    elif genome == "custom":
-        root.set("genome", genome_path)
-    else:
-        raise ValueError(f"Invalid genome: {genome}. Must be one of {GENOMES.keys()} or 'custom'.")
-
-    root.set("locus", "All")
-    root.set("version", "8")
-    root.set("relativePath", "true")
-
-    # Add resources
-    resources_element = ET.SubElement(root, "Resources")
-
-    # Add resource paths
-    for track in tracks:
-        track.add_resource(resources_element)
-
-    # Add data tracks
-    main_panel_elem = ET.SubElement(root, "Panel", name="DataPanel")
-    for track in tracks:
-        track.add_track(main_panel_elem)
-
-    # Add feature tracks
-    feature_panel = ET.SubElement(root, "Panel", name="FeaturePanel")
-
-    # Add reference sequnce
-    ET.SubElement(
-        feature_panel,
-        "Track",
-        id="Reference sequence",
-        name="Reference sequence",
-    )
-    # Add genes
-    gene_ids = []
-
-    if genome == "hg38":
-        gene_ids = ["hg38_genes"]
-    elif genome == "hg19":
-        gene_ids = ["hg19_genes"]
-    elif genome == "t2t":
-        gene_ids = [
-            "https://hgdownload.soe.ucsc.edu/hubs/GCA/009/914/755/GCA_009914755.4/bbi/GCA_009914755.4_T2T-CHM13v2.0.catLiftOffGenesV1/catLiftOffGenesV1.bb",
-            "https://hgdownload.soe.ucsc.edu/hubs/GCA/009/914/755/GCA_009914755.4/bbi/GCA_009914755.4_T2T-CHM13v2.0.augustus.bb",
-        ]
-
-    if gene_ids:
-        for gene_id in gene_ids:
-            ET.SubElement(
-                feature_panel,
-                "Track",
-                id=gene_id,
-            )
-
-    # Panel layout
-    ET.SubElement(root, "PanelLayout", dividerFractions="0.80")
-
-    # Create XML string
-    xml_str = ET.tostring(root, encoding="utf-8")
-    # Prettify XML using minidom
-    xml_str = minidom.parseString(xml_str).toprettyxml(indent="  ")
+    xml_str = create_igv_session_xml(genome, genome_path, tracks)
 
     # Save to output file
     with open(output, "w", encoding="utf-8") as output_file:
@@ -325,8 +258,8 @@ def run():
     parser.add_argument(
         "--genome",
         required=True,
-        choices=["hg19", "hg38", "t2t", "custom"],
-        help="Genome track option",
+        choices=GENOMES.keys() + ["custom"],
+        help="Genome track options",
     )
     parser.add_argument(
         "--genome_path",
