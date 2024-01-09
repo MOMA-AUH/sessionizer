@@ -100,7 +100,7 @@ class DataTrack:
 
 
 @dataclass
-class BamTrack(DataTrack):
+class AllignmentTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
     display_mode: AllignmentDisplayMode
@@ -197,3 +197,15 @@ class BigWigTrack(DataTrack):
                 type="LINEAR",
             )
         return track_elem
+
+
+@dataclass
+class VariantTrack(DataTrack):
+    show_genotypes: bool
+
+    def add_track(self, session_panel: ET.Element):
+        # Create track element using super class method
+        track_elem = super().add_track(session_panel)
+
+        # Add attributes for variant track
+        track_elem.set("showGenotypes", str(self.show_genotypes).lower())

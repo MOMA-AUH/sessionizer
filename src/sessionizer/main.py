@@ -11,12 +11,25 @@ from sessionizer.track_elements import (
     AllignmentColorByOption,
     AllignmentDisplayMode,
     AllignmentGroupByOption,
-    BamTrack,
+    AllignmentTrack,
     BigWigRendererEnum,
     BigWigTrack,
     DataTrack,
+    VariantTrack,
 )
 from sessionizer.utils import generate_symlink, hanlde_attribute
+
+
+# Convert string to bollean
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    elif v.lower() in ["true", "t", "yes", "y", "1"]:
+        return True
+    elif v.lower() in ["false", "f", "no", "n", "0"]:
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def create_igv_session(
@@ -32,6 +45,7 @@ def create_igv_session(
     bw_color: List[str | None],
     bw_negative_color: List[str | None],
     bw_plot_type: List[BigWigRendererEnum],
+    vcf_show_genotypes: List[bool],
     genome: str,
     genome_path: str,
     output: str,
@@ -92,6 +106,11 @@ def create_igv_session(
         bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
         bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
 
+    # Handle VCF specific arguments
+    vcf_files = [file for file in files if file.endswith(".vcf.gz") or file.endswith(".vcf")]
+    if vcf_files:
+        vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
+
     # Cycles for attribute sublists
     # Allignment files
     bam_group_by_cycle = cycle(bam_group_by)
@@ -106,13 +125,16 @@ def create_igv_session(
     bw_negative_color_cycle = cycle(bw_negative_color)
     bw_plot_type_cycle = cycle(bw_plot_type)
 
+    # VCF files
+    vcf_show_genotypes_cycle = cycle(vcf_show_genotypes)
+
     # Create tracks
     tracks: List[DataTrack] = []
     for file, name, height in zip(files, names, heights):
-        # Hanlde bam/cram specific arguments
         if file.endswith(".bam") or file.endswith(".cram"):
+            # Hanlde bam/cram specific arguments
             tracks.append(
-                BamTrack(
+                AllignmentTrack(
                     name=name,
                     path=file,
                     height=height,
@@ -123,9 +145,8 @@ def create_igv_session(
                     show_junctions=next(bam_show_junctions_cycle),
                 )
             )
-
-        # Handle BigWig specific arguments
         elif file.endswith(".bw"):
+            # Handle BigWig specific arguments
             tracks.append(
                 BigWigTrack(
                     name=name,
@@ -135,6 +156,16 @@ def create_igv_session(
                     color=next(bw_color_cycle),
                     negative_color=next(bw_negative_color_cycle),
                     plot_type=next(bw_plot_type_cycle),
+                )
+            )
+        elif file.endswith(".vcf.gz") or file.endswith(".vcf"):
+            # Handle VCF specific arguments
+            tracks.append(
+                VariantTrack(
+                    name=name,
+                    path=file,
+                    height=height,
+                    show_genotypes=next(vcf_show_genotypes_cycle),
                 )
             )
         # Handle other files
@@ -209,14 +240,14 @@ def run():
     parser.add_argument(
         "--bam_show_coverage",
         nargs="+",
-        type=bool,
+        type=str2bool,
         default=[False],
         help="Parameter to show coverage on bam tracks.",
     )
     parser.add_argument(
         "--bam_show_junctions",
         nargs="+",
-        type=bool,
+        type=str2bool,
         default=[False],
         help="Parameter to show junctions on bam tracks.",
     )
@@ -252,6 +283,15 @@ def run():
         type=BigWigRendererEnum,
         default=[BigWigRendererEnum.BAR_CHART],
         help="Parameter to set bw plot type",
+    )
+
+    # VCF options
+    parser.add_argument(
+        "--vcf_show_genotypes",
+        nargs="+",
+        type=str2bool,
+        default=[False],
+        help="Parameter to show genotypes on vcf tracks.",
     )
 
     # Genome options
@@ -302,6 +342,8 @@ def run():
         bw_color=args.bw_color,
         bw_negative_color=args.bw_negative_color,
         bw_plot_type=args.bw_plot_type,
+        # Variant arguments
+        vcf_show_genotypes=args.vcf_show_genotypes,
         # Genome arguments
         genome=args.genome,
         genome_path=args.genome_path,
