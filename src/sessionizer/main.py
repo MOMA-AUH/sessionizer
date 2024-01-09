@@ -5,7 +5,7 @@ from itertools import cycle
 from typing import List
 
 from sessionizer.colors import RGB_COLOR_DICT
-from sessionizer.create_session import create_igv_session_xml
+from sessionizer.generate_xml import generate_xml
 from sessionizer.genomes import GENOMES
 from sessionizer.track_elements import (
     AllignmentColorByOption,
@@ -148,7 +148,7 @@ def create_igv_session(
             )
 
     # Create the root element
-    xml_str = create_igv_session_xml(genome, genome_path, tracks)
+    xml_str = generate_xml(genome, genome_path, tracks)
 
     # Save to output file
     with open(output, "w", encoding="utf-8") as output_file:
@@ -258,7 +258,7 @@ def run():
     parser.add_argument(
         "--genome",
         required=True,
-        choices=GENOMES.keys() + ["custom"],
+        choices=list(GENOMES.keys()) + ["custom"],
         help="Genome track options",
     )
     parser.add_argument(

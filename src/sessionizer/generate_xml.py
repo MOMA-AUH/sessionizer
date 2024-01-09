@@ -6,7 +6,7 @@ from sessionizer.genomes import GENOMES
 from sessionizer.track_elements import DataTrack
 
 
-def create_igv_session_xml(genome: str, genome_path: str, tracks: List[DataTrack]) -> str:
+def generate_xml(genome: str, genome_path: str, tracks: List[DataTrack]) -> str:
     # Initialize session xml
     root = ET.Element("Session")
     root.set("locus", "All")
