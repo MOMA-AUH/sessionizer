@@ -9,9 +9,6 @@ from sessionizer.track_elements import DataTrack
 def generate_xml(genome: str, genome_path: str, tracks: List[DataTrack]) -> str:
     # Initialize session xml
     root = ET.Element("Session")
-    root.set("locus", "All")
-    root.set("version", "8")
-    root.set("relativePath", "true")
 
     # Add genome information
     if genome in GENOMES:
