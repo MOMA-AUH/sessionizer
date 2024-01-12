@@ -97,8 +97,10 @@ def test_multiple_files():
             "--file",
             os.path.join("tests", "data", "alignment_other.sam"),
             "--bam-group-by",
-            "phase" "--bam-group-by",
-            "phase" "--bam-group-by",
+            "phase",
+            "--bam-group-by",
+            "phase",
+            "--bam-group-by",
             "phase",
         ],
     )
