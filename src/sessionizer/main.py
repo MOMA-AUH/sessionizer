@@ -28,11 +28,12 @@ def bw_range_parser(value: str):
     # If range has 2 numbers: extract and set min and max
     if value.count(",") == 1:
         minimum, maximum = map(float, value.split(","))
+        baseline = None
     # If range has 3 numbers: min, mid, max
     elif value.count(",") == 2:
         minimum, baseline, maximum = map(float, value.split(","))
 
-    return BigWigRangeOption(minimum=float(minimum), baseline=float(baseline), maximum=float(maximum))
+    return BigWigRangeOption(minimum=minimum, baseline=baseline, maximum=maximum)
 
 
 # Options sections
@@ -56,10 +57,10 @@ def run(
     output: Annotated[
         Path,
         typer.Option(
-            help="Output XML session file",
+            help="Output XML session file. If not specified, session will be printed to stdout.",
             exists=False,
         ),
-    ] = Path("session.xml"),
+    ] = None,
     # Genome options
     genome: Annotated[
         GENOME,
@@ -83,7 +84,7 @@ def run(
             help="Use relative paths for input files",
             rich_help_panel=INPUT_FILES_OPTIONS,
         ),
-    ] = True,
+    ] = False,
     generate_symlinks: Annotated[
         bool,
         typer.Option(
@@ -150,7 +151,7 @@ def run(
             rich_help_panel=BIGWIG_OPTIONS,
             parser=bw_range_parser,
         ),
-    ] = None,
+    ] = [None],
     bw_color: Annotated[
         List[RGBColorOption],
         typer.Option(
@@ -181,8 +182,26 @@ def run(
         ),
     ] = [False],
 ):
+    """
+    Generate an IGV session XML file.
+
+    To add multiple input files/tracks to the IGV session:
+    * Use the --file option multiple times.
+    * The --name and --height parameters needs to be used the same number of times, if provided.
+    * The alignment specific options e.g. --bam_group_by and --bam_color_by need to be used either once or the same number of times as the provided number of alignment files. Same for the other track types.
+
+    Examples:
+
+    # Generate an IGV session for a single file
+    sessionizer generate --file test.bam
+    """
     # If generate_symlinks is True, create symlinks to the input files
     if generate_symlinks:
+        # Raise error if output is not given
+        if not output:
+            raise ValueError("Output needs to be given if generate_symlinks is True")
+
+        # Generate symlinks
         igv_shortcut_dir = os.path.join(os.path.dirname(output), "igv_shortcuts")
         os.makedirs(igv_shortcut_dir, exist_ok=True)
         file = [generate_symlink(igv_shortcut_dir, file) for file in file]
@@ -192,7 +211,11 @@ def run(
 
     # If use_relative_paths is True, create paths to the input files relative to the output file
     if use_relative_paths:
-        file = [os.path.relpath(path=file, start=os.path.dirname(output)) for file in file]
+        # Raise error if output is not given
+        if not output:
+            raise ValueError("Output needs to be given if use_relative_paths is True")
+
+        file = [Path(f).relative_to(output.parent.absolute(), walk_up=True) for f in file]
 
         if genome_path:
             genome_path = os.path.relpath(path=genome_path, start=os.path.dirname(output))
@@ -216,9 +239,12 @@ def run(
         vcf_show_genotypes=vcf_show_genotypes,
     )
 
-    # Save to output file
-    with open(output, "w", encoding="utf-8") as output_file:
-        output_file.write(xml_str)
+    # Write XML to standard output
+    if not output:
+        print(xml_str)
+    else:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(xml_str)
 
 
 if __name__ == "__main__":

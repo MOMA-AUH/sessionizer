@@ -36,7 +36,7 @@ def generate_xml(genome: GENOME, genome_path: str, tracks: List[DataTrack]) -> s
     if genome in [GENOME.HG38, GENOME.HG19, GENOME.T2T]:
         root.set("genome", genome.get_igv_name())
     elif genome == GENOME.CUSTOM:
-        root.set("genome", genome_path)
+        root.set("genome", str(genome_path))
 
     # Add resources
     resources_element = ET.SubElement(root, "Resources")
@@ -124,7 +124,7 @@ def generate_igv_session(
         raise ValueError(f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal.")
 
     # Hanlde bam/cram specific arguments
-    alignment_files = [file for file in files if file.endswith(".bam") or file.endswith(".cram")]
+    alignment_files = [file for file in files if file.name.endswith(".bam") or file.name.endswith(".cram")]
     if alignment_files:
         bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
         bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
@@ -135,14 +135,15 @@ def generate_igv_session(
         # If group_by_phase and color_by_methylation are not provided, set them to False
 
     # Handle BigWig specific arguments
-    bigwig_files = [file for file in files if file.endswith(".bw")]
+    bigwig_files = [file for file in files if file.name.endswith(".bw") or file.name.endswith(".bigwig") or file.name.endswith(".wig")]
     if bigwig_files:
         bw_color = hanlde_attribute("bw_color", bw_color, bigwig_files, "bigwig files")
         bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
         bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
+        bw_ranges = hanlde_attribute("bw_ranges", bw_ranges, bigwig_files, "bigwig files")
 
     # Handle VCF specific arguments
-    vcf_files = [file for file in files if file.endswith(".vcf.gz") or file.endswith(".vcf")]
+    vcf_files = [file for file in files if file.name.endswith(".vcf.gz") or file.name.endswith(".vcf")]
     if vcf_files:
         vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
 
@@ -166,7 +167,7 @@ def generate_igv_session(
     # Create tracks
     tracks: List[DataTrack] = []
     for file, name, height in zip(files, names, heights):
-        if file.endswith(".bam") or file.endswith(".cram"):
+        if file.name.endswith(".bam") or file.name.endswith(".cram"):
             # Hanlde bam/cram specific arguments
             tracks.append(
                 AllignmentTrack(
@@ -180,7 +181,7 @@ def generate_igv_session(
                     show_junctions=next(bam_show_junctions_cycle),
                 )
             )
-        elif file.endswith(".bw"):
+        elif file.name.endswith(".bw") or file.name.endswith(".bigwig") or file.name.endswith(".wig"):
             # Handle BigWig specific arguments
             tracks.append(
                 BigWigTrack(
@@ -193,7 +194,7 @@ def generate_igv_session(
                     plot_type=next(bw_plot_type_cycle),
                 )
             )
-        elif file.endswith(".vcf.gz") or file.endswith(".vcf"):
+        elif file.name.endswith(".vcf.gz") or file.name.endswith(".vcf"):
             # Handle VCF specific arguments
             tracks.append(
                 VariantTrack(
