@@ -3,10 +3,10 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from enum import Enum
 
-from sessionizer.colors import RGB_COLOR_DICT
+from sessionizer.colors import RGBColorOption
 
 
-class AllignmentGroupByOption(Enum):
+class AllignmentGroupByOption(str, Enum):
     # IGVNAME = "toolname"
     NONE = "none"
     PHASE = "phase"
@@ -15,7 +15,7 @@ class AllignmentGroupByOption(Enum):
         return self.value
 
 
-class AllignmentColorByOption(Enum):
+class AllignmentColorByOption(str, Enum):
     # See full list of options here: https://github.com/igvteam/igv/blob/3a1511c73af1d8eaa31e8fb4058c72314da8157e/src/main/java/org/broad/igv/sam/AlignmentTrack.java#L95
     # IGVNAME = "toolname"
     NONE = "none"
@@ -50,7 +50,7 @@ class AllignmentColorByOption(Enum):
         return self.value
 
 
-class AllignmentDisplayMode(Enum):
+class AllignmentDisplayModeOption(str, Enum):
     EXPANDED = "expanded"
     COLLAPSED = "collapsed"
     SQUISHED = "squished"
@@ -59,12 +59,13 @@ class AllignmentDisplayMode(Enum):
         return self.value
 
 
-class BigWigRendererEnum(Enum):
+class BigWigPlotTypeOption(str, Enum):
     # IGVNAME = "toolname"
     LINE_PLOT = "line"
     SCATTER_PLOT = "scatter"
     HEATMAP = "heatmap"
     BAR_CHART = "bar"
+    NONE = "none"
 
     def __str__(self):
         return self.value
@@ -83,7 +84,7 @@ class DataTrack:
 
     # Method for adding resource to IGV session
     def add_resource(self, parent_elem):
-        return ET.SubElement(parent_elem, "Resource", name=self.name, path=self.path)
+        return ET.SubElement(parent_elem, "Resource", path=self.path)
 
     # Method for adding track to IGV session
     def add_track(self, session_panel: ET.Element):
@@ -103,7 +104,7 @@ class DataTrack:
 class AllignmentTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
-    display_mode: AllignmentDisplayMode
+    display_mode: AllignmentDisplayModeOption
     show_coverage: bool
     show_junctions: bool
 
@@ -136,6 +137,13 @@ class AllignmentTrack(DataTrack):
 
 
 @dataclass
+class BigWigRangeOption:
+    minimum: float | None
+    baseline: float | None
+    maximum: float | None
+
+
+@dataclass
 class BigWigTrack(DataTrack):
     """
     This class represents a BigWig Track.
@@ -146,34 +154,12 @@ class BigWigTrack(DataTrack):
     - color: The color of the track.
     - negative_color: The color for negative values in the track.
 
-    Additional attributes:
-    - min: The minimum value of the track.
-    - mid: The mid value of the track.
-    - max: The maximum value of the track.
     """
 
-    plot_type: BigWigRendererEnum
-    range: str | None
-    color: str | None
-    negative_color: str | None
-
-    min: float | None = field(init=False)
-    mid: float | None = field(init=False)
-    max: float | None = field(init=False)
-
-    def __post_init__(self):
-        if not self.range:
-            self.min = self.mid = self.max = None
-        else:
-            # If range has 2 numbers: extract and set min and max
-            if self.range.count(",") == 1:
-                self.min, self.max = map(float, self.range.split(","))
-            # If range has 3 numbers: min, mid, max
-            elif self.range.count(",") == 2:
-                self.min, self.mid, self.max = map(float, self.range.split(","))
-            # Else invalid range
-            else:
-                raise ValueError(f"Invalid range: {self.range}. Should be min,max or min,mid,max.")
+    plot_type: BigWigPlotTypeOption
+    range: BigWigRangeOption
+    color: RGBColorOption
+    negative_color: RGBColorOption
 
     # Method for adding track to IGV session
     def add_track(self, session_panel: ET.Element):
@@ -181,21 +167,24 @@ class BigWigTrack(DataTrack):
         track_elem = super().add_track(session_panel)
 
         # Add attributes for BigWig track
-        if self.color is not None and RGB_COLOR_DICT[self.color]:
-            track_elem.set("color", RGB_COLOR_DICT[self.color])
-        if self.negative_color is not None and RGB_COLOR_DICT[self.negative_color]:
-            track_elem.set("altColor", RGB_COLOR_DICT[self.negative_color])
-        if self.plot_type is not None:
+        if self.color != RGBColorOption.NONE:
+            track_elem.set("color", self.color.rgb_values())
+        if self.negative_color != RGBColorOption.NONE:
+            track_elem.set("altColor", self.negative_color.rgb_values())
+        if self.plot_type != BigWigPlotTypeOption.NONE:
             track_elem.set("renderer", self.plot_type.name)
-        if all(x is not None for x in [self.min, self.mid, self.max]):
-            ET.SubElement(
+        if self.range is not None:
+            range_elem = ET.SubElement(
                 track_elem,
                 "DataRange",
-                minimum=str(self.min),
-                baseline=str(self.mid),
-                maximum=str(self.max),
                 type="LINEAR",
             )
+            if self.range.minimum is not None:
+                range_elem.set("minimum", str(self.range.minimum))
+            if self.range.baseline is not None:
+                range_elem.set("baseline", str(self.range.baseline))
+            if self.range.maximum is not None:
+                range_elem.set("maximum", str(self.range.maximum))
         return track_elem
 
 

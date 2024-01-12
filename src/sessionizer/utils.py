@@ -1,5 +1,5 @@
 import os
-from typing import List
+from pathlib import Path
 
 FILE_INDEX_EXTENSIONS = {
     "bam": ".bai",
@@ -13,7 +13,7 @@ FILE_INDEX_EXTENSIONS = {
 }
 
 
-def generate_symlink(shortcut_dir, file):
+def generate_symlink(shortcut_dir: Path, file: Path):
     symlink = os.path.join(shortcut_dir, os.path.basename(file))
     try:
         os.symlink(src=file, dst=symlink)
@@ -21,7 +21,7 @@ def generate_symlink(shortcut_dir, file):
         pass
 
     # Handle index files if they exist (https://igvteam.github.io/igv-webapp/fileFormats.html)
-    file_type = file.split(".")[-1]
+    file_type = file.suffix
     if file_type in FILE_INDEX_EXTENSIONS:
         file_index = file + FILE_INDEX_EXTENSIONS[file_type]
         if os.path.exists(file_index):
@@ -32,11 +32,3 @@ def generate_symlink(shortcut_dir, file):
                 pass
 
     return symlink
-
-
-def hanlde_attribute(attribute: str, values: List, files: List, file_type: str) -> List:
-    if len(values) != len(files) and len(values) != 1:
-        raise ValueError(f"Length of {attribute} ({len(values)}) must be 1 or equal to the number of {file_type} ({len(files)}).")
-    if len(values) == 1:
-        return values * len(files)
-    return values

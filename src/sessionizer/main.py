@@ -1,354 +1,225 @@
-import argparse
 import os
 import re
-from itertools import cycle
+from pathlib import Path
 from typing import List
 
-from sessionizer.colors import RGB_COLOR_DICT
-from sessionizer.generate_xml import generate_xml
-from sessionizer.genomes import GENOMES
+import typer
+from typing_extensions import Annotated
+
+from sessionizer.colors import RGBColorOption
+from sessionizer.create_igv_session import generate_igv_session
+from sessionizer.genomes import GENOME
 from sessionizer.track_elements import (
     AllignmentColorByOption,
-    AllignmentDisplayMode,
+    AllignmentDisplayModeOption,
     AllignmentGroupByOption,
-    AllignmentTrack,
-    BigWigRendererEnum,
-    BigWigTrack,
-    DataTrack,
-    VariantTrack,
+    BigWigPlotTypeOption,
+    BigWigRangeOption,
 )
-from sessionizer.utils import generate_symlink, hanlde_attribute
+from sessionizer.utils import generate_symlink
+
+app = typer.Typer(rich_markup_mode="rich")
 
 
-# Convert string to bollean
-def str2bool(v):
-    if isinstance(v, bool):
-        return v
-    elif v.lower() in ["true", "t", "yes", "y", "1"]:
-        return True
-    elif v.lower() in ["false", "f", "no", "n", "0"]:
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+def bw_range_parser(value: str):
+    if not re.match(r"^\d+(\.\d+)?,\d+(\.\d+)?(,\d+(\.\d+)?)?$", value):
+        raise ValueError(f"The bw_range {value} does not fit the pattern float,float (min,max) or float,float,float (min,mid,max).")
+
+    # If range has 2 numbers: extract and set min and max
+    if value.count(",") == 1:
+        minimum, maximum = map(float, value.split(","))
+    # If range has 3 numbers: min, mid, max
+    elif value.count(",") == 2:
+        minimum, baseline, maximum = map(float, value.split(","))
+
+    return BigWigRangeOption(minimum=float(minimum), baseline=float(baseline), maximum=float(maximum))
 
 
-def create_igv_session(
-    files: List[str],
-    names: List[str] | None,
-    heights: List[int | None],
-    bam_group_by: List[AllignmentGroupByOption],
-    bam_color_by: List[AllignmentColorByOption],
-    bam_display_mode: List[AllignmentDisplayMode],
-    bam_show_coverage: List[bool],
-    bam_show_junctions: List[bool],
-    bw_ranges: List[str | None],
-    bw_color: List[str | None],
-    bw_negative_color: List[str | None],
-    bw_plot_type: List[BigWigRendererEnum],
-    vcf_show_genotypes: List[bool],
-    genome: str,
-    genome_path: str,
-    output: str,
-    use_relative_paths: bool | None,
-    generate_symlinks: bool | None,
+# Options sections
+GENOME_OPTIONS = "Genome options"
+INPUT_FILES_OPTIONS = "Input files options"
+TRACK_OPTIONS = "Track options"
+ALIGNMENT_OPTIONS = "Alignment options"
+BIGWIG_OPTIONS = "BigWig options"
+VARIANT_OPTIONS = "Variant options"
+
+
+@app.command()
+def run(
+    file: Annotated[
+        List[Path],
+        typer.Option(
+            help="Input file (can be used multiple times)",
+            exists=True,
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            help="Output XML session file",
+            exists=False,
+        ),
+    ] = Path("session.xml"),
+    # Genome options
+    genome: Annotated[
+        GENOME,
+        typer.Option(
+            help="Genome track options",
+            rich_help_panel=GENOME_OPTIONS,
+        ),
+    ] = GENOME.HG38,
+    genome_path: Annotated[
+        Path,
+        typer.Option(
+            help="Path to custom genome FASTA file",
+            rich_help_panel=GENOME_OPTIONS,
+            exists=True,
+        ),
+    ] = None,
+    # Input files options
+    use_relative_paths: Annotated[
+        bool,
+        typer.Option(
+            help="Use relative paths for input files",
+            rich_help_panel=INPUT_FILES_OPTIONS,
+        ),
+    ] = True,
+    generate_symlinks: Annotated[
+        bool,
+        typer.Option(
+            help="Generate symlinks to input files",
+            rich_help_panel=INPUT_FILES_OPTIONS,
+        ),
+    ] = False,
+    # Track options
+    name: Annotated[
+        List[str],
+        typer.Option(
+            help="Name shown in IGV for input file (can be used multiple times)",
+            rich_help_panel=TRACK_OPTIONS,
+        ),
+    ] = None,
+    height: Annotated[
+        List[int],
+        typer.Option(
+            help="Height of track in IGV (can be used multiple times)",
+            rich_help_panel=TRACK_OPTIONS,
+        ),
+    ] = None,
+    # Alignment options
+    bam_group_by: Annotated[
+        List[AllignmentGroupByOption],
+        typer.Option(
+            help="Parameter to group bams by.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [AllignmentGroupByOption.NONE],
+    bam_color_by: Annotated[
+        List[AllignmentColorByOption],
+        typer.Option(
+            help="Parameter to color bams by.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [AllignmentColorByOption.NONE],
+    bam_display_mode: Annotated[
+        List[AllignmentDisplayModeOption],
+        typer.Option(
+            help="Parameter to display mode for bams.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [AllignmentDisplayModeOption.COLLAPSED],
+    bam_show_coverage: Annotated[
+        List[bool],
+        typer.Option(
+            help="Parameter to show coverage on bams.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [False],
+    bam_show_junctions: Annotated[
+        List[bool],
+        typer.Option(
+            help="Parameter to show junctions on bams.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [False],
+    # BigWig options
+    bw_ranges: Annotated[
+        List[BigWigRangeOption],
+        typer.Option(
+            help="Parameter to set bw ranges",
+            rich_help_panel=BIGWIG_OPTIONS,
+            parser=bw_range_parser,
+        ),
+    ] = None,
+    bw_color: Annotated[
+        List[RGBColorOption],
+        typer.Option(
+            help="Parameter to set bw color",
+            rich_help_panel=BIGWIG_OPTIONS,
+        ),
+    ] = [RGBColorOption.NONE],
+    bw_negative_color: Annotated[
+        List[RGBColorOption],
+        typer.Option(
+            help="Parameter to set bw negative color",
+            rich_help_panel=BIGWIG_OPTIONS,
+        ),
+    ] = [RGBColorOption.NONE],
+    bw_plot_type: Annotated[
+        List[BigWigPlotTypeOption],
+        typer.Option(
+            help="Parameter to set bw plot type",
+            rich_help_panel=BIGWIG_OPTIONS,
+        ),
+    ] = [BigWigPlotTypeOption.BAR_CHART],
+    # Variant options
+    vcf_show_genotypes: Annotated[
+        List[bool],
+        typer.Option(
+            help="Parameter to show genotypes on vcf tracks.",
+            rich_help_panel=VARIANT_OPTIONS,
+        ),
+    ] = [False],
 ):
     # If generate_symlinks is True, create symlinks to the input files
     if generate_symlinks:
         igv_shortcut_dir = os.path.join(os.path.dirname(output), "igv_shortcuts")
         os.makedirs(igv_shortcut_dir, exist_ok=True)
-        files = [generate_symlink(igv_shortcut_dir, file) for file in files]
+        file = [generate_symlink(igv_shortcut_dir, file) for file in file]
 
         if genome_path:
             genome_path = generate_symlink(igv_shortcut_dir, genome_path)
 
     # If use_relative_paths is True, create paths to the input files relative to the output file
     if use_relative_paths:
-        files = [os.path.relpath(path=file, start=os.path.dirname(output)) for file in files]
+        file = [os.path.relpath(path=file, start=os.path.dirname(output)) for file in file]
 
         if genome_path:
             genome_path = os.path.relpath(path=genome_path, start=os.path.dirname(output))
 
-    if not names:
-        # If names list is not provided, set it to the file name
-        names = [os.path.basename(file) for file in files]
-    elif len(files) != len(names):
-        # Check if the lengths of file lists and names lists are equal
-        raise ValueError(f"Length of files ({len(files)}) and names ({len(names)}) must be equal.")
-
-    if not heights:
-        # If heights list is not provided, set it to none
-        heights = [None] * len(files)
-    elif len(files) != len(heights):
-        # Check if the lengths of file lists and heights lists are equal
-        raise ValueError(f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal.")
-
-    # Hanlde bam/cram specific arguments
-    alignment_files = [file for file in files if file.endswith(".bam") or file.endswith(".cram")]
-    if alignment_files:
-        bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
-        bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
-        bam_display_mode = hanlde_attribute("bam_display_mode", bam_display_mode, alignment_files, "alignment files")
-        bam_show_coverage = hanlde_attribute("bam_show_coverage", bam_show_coverage, alignment_files, "alignment files")
-        bam_show_junctions = hanlde_attribute("bam_show_junctions", bam_show_junctions, alignment_files, "alignment files")
-
-        # If group_by_phase and color_by_methylation are not provided, set them to False
-
-    # Handle BigWig specific arguments
-    bigwig_files = [file for file in files if file.endswith(".bw")]
-    if bigwig_files:
-        if bw_ranges:
-            # Check if all bw_ranges fits the pattern float,float (min,max) or float,float,float (min,mid,max)
-            for bw_range in bw_ranges:
-                if bw_range and not re.match(r"^\d+(\.\d+)?,\d+(\.\d+)?(,\d+(\.\d+)?)?$", bw_range):
-                    raise ValueError(f"The bw_range {bw_range} does not fit the pattern float,float (min,max) or float,float,float (min,mid,max).")
-
-        bw_color = hanlde_attribute("bw_color", bw_color, bigwig_files, "bigwig files")
-        bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
-        bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
-
-    # Handle VCF specific arguments
-    vcf_files = [file for file in files if file.endswith(".vcf.gz") or file.endswith(".vcf")]
-    if vcf_files:
-        vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
-
-    # Cycles for attribute sublists
-    # Allignment files
-    bam_group_by_cycle = cycle(bam_group_by)
-    bam_color_by_cycle = cycle(bam_color_by)
-    bam_display_mode_cycle = cycle(bam_display_mode)
-    bam_show_coverage_cycle = cycle(bam_show_coverage)
-    bam_show_junctions_cycle = cycle(bam_show_junctions)
-
-    # Bigwig files
-    bw_ranges_cycle = cycle(bw_ranges)
-    bw_color_cycle = cycle(bw_color)
-    bw_negative_color_cycle = cycle(bw_negative_color)
-    bw_plot_type_cycle = cycle(bw_plot_type)
-
-    # VCF files
-    vcf_show_genotypes_cycle = cycle(vcf_show_genotypes)
-
-    # Create tracks
-    tracks: List[DataTrack] = []
-    for file, name, height in zip(files, names, heights):
-        if file.endswith(".bam") or file.endswith(".cram"):
-            # Hanlde bam/cram specific arguments
-            tracks.append(
-                AllignmentTrack(
-                    name=name,
-                    path=file,
-                    height=height,
-                    group_by=next(bam_group_by_cycle),
-                    color_by=next(bam_color_by_cycle),
-                    display_mode=next(bam_display_mode_cycle),
-                    show_coverage=next(bam_show_coverage_cycle),
-                    show_junctions=next(bam_show_junctions_cycle),
-                )
-            )
-        elif file.endswith(".bw"):
-            # Handle BigWig specific arguments
-            tracks.append(
-                BigWigTrack(
-                    name=name,
-                    path=file,
-                    height=height,
-                    range=next(bw_ranges_cycle),
-                    color=next(bw_color_cycle),
-                    negative_color=next(bw_negative_color_cycle),
-                    plot_type=next(bw_plot_type_cycle),
-                )
-            )
-        elif file.endswith(".vcf.gz") or file.endswith(".vcf"):
-            # Handle VCF specific arguments
-            tracks.append(
-                VariantTrack(
-                    name=name,
-                    path=file,
-                    height=height,
-                    show_genotypes=next(vcf_show_genotypes_cycle),
-                )
-            )
-        # Handle other files
-        else:
-            tracks.append(
-                DataTrack(
-                    name=name,
-                    path=file,
-                    height=height,
-                )
-            )
-
-    # Create the root element
-    xml_str = generate_xml(genome, genome_path, tracks)
+    # Generate XML
+    xml_str = generate_igv_session(
+        files=file,
+        names=name,
+        heights=height,
+        genome=genome,
+        genome_path=genome_path,
+        bam_group_by=bam_group_by,
+        bam_color_by=bam_color_by,
+        bam_display_mode=bam_display_mode,
+        bam_show_coverage=bam_show_coverage,
+        bam_show_junctions=bam_show_junctions,
+        bw_ranges=bw_ranges,
+        bw_color=bw_color,
+        bw_negative_color=bw_negative_color,
+        bw_plot_type=bw_plot_type,
+        vcf_show_genotypes=vcf_show_genotypes,
+    )
 
     # Save to output file
     with open(output, "w", encoding="utf-8") as output_file:
         output_file.write(xml_str)
 
 
-def run():
-    parser = argparse.ArgumentParser(
-        description="""
-        Easy way to create an IGV session file in XML format.
-        """,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument(
-        "--files",
-        required=True,
-        nargs="+",
-        help="List of input files",
-        type=os.path.realpath,
-    )
-    parser.add_argument(
-        "--names",
-        nargs="+",
-        help="List of names for input files",
-    )
-    parser.add_argument(
-        "--heights",
-        nargs="+",
-        type=int,
-        help="List of heights for input files",
-    )
-
-    # Alignement options
-    parser.add_argument(
-        "--bam_group_by",
-        nargs="+",
-        choices=list(AllignmentGroupByOption),
-        type=AllignmentGroupByOption,
-        default=[AllignmentGroupByOption.NONE],
-        help="Parameter to group bams by. Either single value (shared) or multiple values (per bam).",
-    )
-    parser.add_argument(
-        "--bam_color_by",
-        nargs="+",
-        choices=list(AllignmentColorByOption),
-        type=AllignmentColorByOption,
-        default=[AllignmentColorByOption.NONE],
-        help="Parameter to color bams by. Either single value (shared) or multiple values (per bam).",
-    )
-    parser.add_argument(
-        "--bam_display_mode",
-        nargs="+",
-        choices=list(AllignmentDisplayMode),
-        type=AllignmentDisplayMode,
-        default=[AllignmentDisplayMode.COLLAPSED],
-        help="Parameter to display bams by. Either single value (shared) or multiple values (per bam).",
-    )
-    parser.add_argument(
-        "--bam_show_coverage",
-        nargs="+",
-        type=str2bool,
-        default=[False],
-        help="Parameter to show coverage on bam tracks.",
-    )
-    parser.add_argument(
-        "--bam_show_junctions",
-        nargs="+",
-        type=str2bool,
-        default=[False],
-        help="Parameter to show junctions on bam tracks.",
-    )
-
-    # BigWig options
-    parser.add_argument(
-        "--bw_ranges",
-        nargs="+",
-        type=str,
-        default=[None],
-        help="List of comma seperated float values to set bw range. Either 'min,max' or 'min,mid,max', eg. '0.4,10,100'.",
-    )
-    parser.add_argument(
-        "--bw_color",
-        nargs="+",
-        choices=list(RGB_COLOR_DICT.keys()),
-        type=str,
-        default=[None],
-        help="Parameter to set bw color",
-    )
-    parser.add_argument(
-        "--bw_negative_color",
-        nargs="+",
-        choices=list(RGB_COLOR_DICT.keys()),
-        type=str,
-        default=[None],
-        help="Parameter to set bw negative color",
-    )
-    parser.add_argument(
-        "--bw_plot_type",
-        nargs="+",
-        choices=list(BigWigRendererEnum),
-        type=BigWigRendererEnum,
-        default=[BigWigRendererEnum.BAR_CHART],
-        help="Parameter to set bw plot type",
-    )
-
-    # VCF options
-    parser.add_argument(
-        "--vcf_show_genotypes",
-        nargs="+",
-        type=str2bool,
-        default=[False],
-        help="Parameter to show genotypes on vcf tracks.",
-    )
-
-    # Genome options
-    parser.add_argument(
-        "--genome",
-        required=True,
-        choices=list(GENOMES.keys()) + ["custom"],
-        help="Genome track options",
-    )
-    parser.add_argument(
-        "--genome_path",
-        default="",
-        help="Path to custom genome FASTA file (for genome = 'custom' option)",
-    )
-
-    # Output options
-    parser.add_argument(
-        "--output",
-        required=True,
-        help="Output XML session file",
-        type=os.path.realpath,
-    )
-    parser.add_argument(
-        "--use_relative_paths",
-        default=True,
-        help="Use relative paths for input files",
-    )
-    parser.add_argument(
-        "--generate_symlinks",
-        default=False,
-        help="Generate symlinks to input files",
-    )
-
-    args = parser.parse_args()
-
-    create_igv_session(
-        files=args.files,
-        names=args.names,
-        heights=args.heights,
-        # BAM arguments
-        bam_group_by=args.bam_group_by,
-        bam_color_by=args.bam_color_by,
-        bam_display_mode=args.bam_display_mode,
-        bam_show_coverage=args.bam_show_coverage,
-        bam_show_junctions=args.bam_show_junctions,
-        # BigWig arguments
-        bw_ranges=args.bw_ranges,
-        bw_color=args.bw_color,
-        bw_negative_color=args.bw_negative_color,
-        bw_plot_type=args.bw_plot_type,
-        # Variant arguments
-        vcf_show_genotypes=args.vcf_show_genotypes,
-        # Genome arguments
-        genome=args.genome,
-        genome_path=args.genome_path,
-        # Output arguments
-        output=args.output,
-        use_relative_paths=args.use_relative_paths,
-        generate_symlinks=args.generate_symlinks,
-    )
+if __name__ == "__main__":
+    app()
