@@ -2,14 +2,33 @@ import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 
 from sessionizer.colors import RGBColorOption
 
 
 class AllignmentGroupByOption(str, Enum):
     # IGVNAME = "toolname"
-    NONE = "none"
+    STRAND = "strand"
+    SAMPLE = "sample"
+    READ_GROUP = "read_group"
+    LIBRARY = "library"
+    FIRST_OF_PAIR_STRAND = "first_of_pair"
+    PAIR_ORIENTATION = "pair_orientation"
+    MATE_CHROMOSOME = "mate_chromosome"
+    CHIMERIC = "chimeric"
+    SUPPLEMENTARY = "supplementary"
+    BASE_AT_POS = "base_at_position"
+    INSERTION_AT_POS = "insertion_at_position"
+    MOVIE = "movie"
+    ZMW = "ZMW"
+    HAPLOTYPE = "haplotype"
+    READ_ORDER = "read_order"
+    LINKED = "linked"
     PHASE = "phase"
+    REFERENCE_CONCORDANCE = "reference_concordance"
+    MAPPING_QUALITY = "mapping_quality"
+    NONE = "none"
 
     def __str__(self):
         return self.value
@@ -74,17 +93,17 @@ class BigWigPlotTypeOption(str, Enum):
 @dataclass
 class DataTrack:
     name: str
-    path: str
+    path: Path
     height: int | None
 
     file_type: str = field(init=False)
 
     def __post_init__(self):
-        self.file_type = self.path.split(".")[-1]
+        self.file_type = self.path.suffix
 
     # Method for adding resource to IGV session
     def add_resource(self, parent_elem):
-        return ET.SubElement(parent_elem, "Resource", path=self.path)
+        return ET.SubElement(parent_elem, "Resource", path=str(self.path))
 
     # Method for adding track to IGV session
     def add_track(self, session_panel: ET.Element):
@@ -92,7 +111,7 @@ class DataTrack:
             session_panel,
             "Track",
             name=self.name,
-            id=os.path.basename(self.path),
+            id=self.path.name,
         )
         if self.height is not None:
             track_elem.set("height", str(self.height))
@@ -179,11 +198,11 @@ class BigWigTrack(DataTrack):
                 "DataRange",
                 type="LINEAR",
             )
-            if self.range.minimum is not None:
+            if self.range.minimum:
                 range_elem.set("minimum", str(self.range.minimum))
-            if self.range.baseline is not None:
+            if self.range.baseline:
                 range_elem.set("baseline", str(self.range.baseline))
-            if self.range.maximum is not None:
+            if self.range.maximum:
                 range_elem.set("maximum", str(self.range.maximum))
         return track_elem
 

@@ -1,0 +1,8 @@
+@HD VN:1.6 SO:coordinate
+@SQ SN:example_genome LN:20
+
+read1    0   example_genome   1   30  5M  *   0   0   ATCGA   BBBBB
+read2    0   example_genome   2   30  5M  *   0   0   TCGAT   BBBBB
+read3    0   example_genome   5   30  5M  *   0   0   GATCG   BBBBB
+read4    0   example_genome   8   30  5M  *   0   0   CGATC   BBBBB
+read5    0   example_genome   13  30  5M  *   0   0   TCGAT   BBBBB
