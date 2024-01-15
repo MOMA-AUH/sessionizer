@@ -157,9 +157,14 @@ class AllignmentTrack(DataTrack):
         track_elem.set("colorBy", str(self.color_by.name))
         track_elem.set("displayMode", str(self.display_mode.name))
 
-        track_elem.set("hideSmallIndels", str(self.hide_small_indels).lower())
-        track_elem.set("smallIndelThreshold", str(self.small_indel_threshold))
-        track_elem.set("quickConsensusMode", str(self.quick_consensus_mode).lower())
+        # Add RenderOptions:
+        render_options = ET.SubElement(
+            track_elem,
+            "RenderOptions",
+        )
+        render_options.set("hideSmallIndels", str(self.hide_small_indels).lower())
+        render_options.set("smallIndelThreshold", str(self.small_indel_threshold))
+        render_options.set("quickConsensusMode", str(self.quick_consensus_mode).lower())
 
         return track_elem
 
