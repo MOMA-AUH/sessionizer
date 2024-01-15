@@ -124,6 +124,11 @@ class AllignmentTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
     display_mode: AllignmentDisplayModeOption
+
+    hide_small_indels: bool
+    small_indel_threshold: int
+    quick_consensus_mode: bool
+
     show_coverage: bool
     show_junctions: bool
 
@@ -151,6 +156,10 @@ class AllignmentTrack(DataTrack):
         track_elem.set("groupBy", str(self.group_by.name))
         track_elem.set("colorBy", str(self.color_by.name))
         track_elem.set("displayMode", str(self.display_mode.name))
+
+        track_elem.set("hideSmallIndels", str(self.hide_small_indels).lower())
+        track_elem.set("smallIndelThreshold", str(self.small_indel_threshold))
+        track_elem.set("quickConsensusMode", str(self.quick_consensus_mode).lower())
 
         return track_elem
 

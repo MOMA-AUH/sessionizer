@@ -129,6 +129,27 @@ def run(
             rich_help_panel=ALIGNMENT_OPTIONS,
         ),
     ] = [AllignmentDisplayModeOption.COLLAPSED],
+    bam_hide_small_indels: Annotated[
+        List[bool],
+        typer.Option(
+            help="Parameter to hide small indels on bams.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [False],
+    bam_small_indel_threshold: Annotated[
+        List[int],
+        typer.Option(
+            help="Parameter to set small indel threshold on bams.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [0],
+    bam_quick_consensus_mode: Annotated[
+        List[bool],
+        typer.Option(
+            help="Parameter to use quick consensus mode on bams.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [False],
     bam_show_coverage: Annotated[
         List[bool],
         typer.Option(
@@ -230,6 +251,9 @@ def run(
         bam_group_by=bam_group_by,
         bam_color_by=bam_color_by,
         bam_display_mode=bam_display_mode,
+        bam_hide_small_indels=bam_hide_small_indels,
+        bam_small_indel_threshold=bam_small_indel_threshold,
+        bam_quick_consensus_mode=bam_quick_consensus_mode,
         bam_show_coverage=bam_show_coverage,
         bam_show_junctions=bam_show_junctions,
         bw_ranges=bw_ranges,

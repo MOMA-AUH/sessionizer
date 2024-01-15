@@ -101,6 +101,9 @@ def generate_igv_session(
     bam_group_by: AllignmentGroupByOption,
     bam_color_by: AllignmentColorByOption,
     bam_display_mode: AllignmentDisplayModeOption,
+    bam_hide_small_indels: bool,
+    bam_small_indel_threshold: int,
+    bam_quick_consensus_mode: bool,
     bam_show_coverage: bool,
     bam_show_junctions: bool,
     bw_ranges: List[BigWigRangeOption],
@@ -129,6 +132,9 @@ def generate_igv_session(
         bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
         bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
         bam_display_mode = hanlde_attribute("bam_display_mode", bam_display_mode, alignment_files, "alignment files")
+        bam_hide_small_indels = hanlde_attribute("bam_hide_small_indels", bam_hide_small_indels, alignment_files, "alignment files")
+        bam_small_indel_threshold = hanlde_attribute("bam_small_indel_threshold", bam_small_indel_threshold, alignment_files, "alignment files")
+        bam_quick_consensus_mode = hanlde_attribute("bam_quick_consensus_mode", bam_quick_consensus_mode, alignment_files, "alignment files")
         bam_show_coverage = hanlde_attribute("bam_show_coverage", bam_show_coverage, alignment_files, "alignment files")
         bam_show_junctions = hanlde_attribute("bam_show_junctions", bam_show_junctions, alignment_files, "alignment files")
 
@@ -152,6 +158,9 @@ def generate_igv_session(
     bam_group_by_cycle = cycle(bam_group_by)
     bam_color_by_cycle = cycle(bam_color_by)
     bam_display_mode_cycle = cycle(bam_display_mode)
+    bam_hide_small_indels_cycle = cycle(bam_hide_small_indels)
+    bam_small_indel_threshold_cycle = cycle(bam_small_indel_threshold)
+    bam_quick_consensus_mode_cycle = cycle(bam_quick_consensus_mode)
     bam_show_coverage_cycle = cycle(bam_show_coverage)
     bam_show_junctions_cycle = cycle(bam_show_junctions)
 
@@ -176,6 +185,9 @@ def generate_igv_session(
                     height=height,
                     group_by=next(bam_group_by_cycle),
                     color_by=next(bam_color_by_cycle),
+                    hide_small_indels=next(bam_hide_small_indels_cycle),
+                    small_indel_threshold=next(bam_small_indel_threshold_cycle),
+                    quick_consensus_mode=next(bam_quick_consensus_mode_cycle),
                     display_mode=next(bam_display_mode_cycle),
                     show_coverage=next(bam_show_coverage_cycle),
                     show_junctions=next(bam_show_junctions_cycle),
