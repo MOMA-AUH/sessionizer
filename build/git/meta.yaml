@@ -1,6 +1,6 @@
 {% set name = "sessionizer" %}
 {% set version = "0.2.0" %}
-{% set build_number = 0 %}
+{% set build_number = 1 %}
 
 package:
   name: {{ name|lower }}
@@ -16,8 +16,13 @@ build:
   number: "{{ build_number }}"
 
 requirements:
-  host:
+  build:
     - pip
+    - python >=3.10
+    - setuptools
+  host:
     - python >=3.10
   run:
     - python >=3.10
+    - rich
+    - typer
