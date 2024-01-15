@@ -73,11 +73,8 @@ The package can be installed using conda from a local build directory:
 conda install -c file:///path/to/build sessionizer
 ```
 
-To a new conda environment:
+## Build package using conda
+The `build_local.sh` and `build_from_git.sh` scripts in `build` can be used to build the package. The scripts utilize the `conda build` command to build the package from a `meta.yaml` file. 
 
-```bash
-conda create -n sessionizer -c file:///path/to/build sessionizer
-```
-
-## Local build
-The `build_local.sh` and `build_from_git.sh` scripts in `build` can be used to build the package. The scripts utilize the `conda build` command to build the package from a meta.yaml file.
+## Developer note
+When releasing an update, make sure to update the `version` in the `meta.yaml` files and in `setup.py` before making a release on GitHub. The tag of the release should match the version in the `meta.yaml`.
