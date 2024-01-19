@@ -231,3 +231,28 @@ class VariantTrack(DataTrack):
 
         # Add attributes for variant track
         track_elem.set("showGenotypes", str(self.show_genotypes).lower())
+
+        return track_elem
+
+
+class GtfDisplayModeOption(str, Enum):
+    EXPANDED = "expanded"
+    COLLAPSED = "collapsed"
+    SQUISHED = "squished"
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass
+class GtfTrack(DataTrack):
+    display_mode: GtfDisplayModeOption
+
+    def add_track(self, session_panel: ET.Element):
+        # Create track element using super class method
+        track_elem = super().add_track(session_panel)
+
+        # Add attributes for GTF track
+        track_elem.set("displayMode", self.display_mode)
+
+        return track_elem

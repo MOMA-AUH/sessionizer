@@ -15,6 +15,7 @@ from sessionizer.track_elements import (
     AllignmentGroupByOption,
     BigWigPlotTypeOption,
     BigWigRangeOption,
+    GtfDisplayModeOption,
 )
 from sessionizer.utils import generate_symlink
 
@@ -43,6 +44,7 @@ TRACK_OPTIONS = "Track options"
 ALIGNMENT_OPTIONS = "Alignment options"
 BIGWIG_OPTIONS = "BigWig options"
 VARIANT_OPTIONS = "Variant options"
+GTF_OPTIONS = "GTF options"
 
 
 @app.command()
@@ -202,6 +204,14 @@ def run(
             rich_help_panel=VARIANT_OPTIONS,
         ),
     ] = [False],
+    # Gtf options
+    gtf_display_mode: Annotated[
+        List[GtfDisplayModeOption],
+        typer.Option(
+            help="Parameter to display mode for gtf tracks.",
+            rich_help_panel=GTF_OPTIONS,
+        ),
+    ] = [GtfDisplayModeOption.COLLAPSED],
 ):
     """
     Generate an IGV session XML file.
@@ -261,6 +271,7 @@ def run(
         bw_negative_color=bw_negative_color,
         bw_plot_type=bw_plot_type,
         vcf_show_genotypes=vcf_show_genotypes,
+        gtf_display_mode=gtf_display_mode,
     )
 
     # Write XML to standard output

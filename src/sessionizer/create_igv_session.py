@@ -6,6 +6,7 @@ from typing import List
 from xml.dom import minidom
 
 from sessionizer.colors import RGBColorOption
+from sessionizer.filetypes import ALIGNMENT_SUFFIXES, BIGWIG_SUFFIXES, GTF_SUFFIXES, VCF_SUFFIXES
 from sessionizer.genomes import GENOME
 from sessionizer.track_elements import (
     AllignmentColorByOption,
@@ -16,6 +17,8 @@ from sessionizer.track_elements import (
     BigWigRangeOption,
     BigWigTrack,
     DataTrack,
+    GtfDisplayModeOption,
+    GtfTrack,
     VariantTrack,
 )
 
@@ -98,19 +101,20 @@ def generate_igv_session(
     heights: List[int] | None,
     genome: GENOME,
     genome_path: Path,
-    bam_group_by: AllignmentGroupByOption,
-    bam_color_by: AllignmentColorByOption,
-    bam_display_mode: AllignmentDisplayModeOption,
+    bam_group_by: List[AllignmentGroupByOption],
+    bam_color_by: List[AllignmentColorByOption],
+    bam_display_mode: List[AllignmentDisplayModeOption],
     bam_hide_small_indels: bool,
     bam_small_indel_threshold: int,
     bam_quick_consensus_mode: bool,
     bam_show_coverage: bool,
     bam_show_junctions: bool,
     bw_ranges: List[BigWigRangeOption],
-    bw_color: RGBColorOption,
-    bw_negative_color: RGBColorOption,
+    bw_color: List[RGBColorOption],
+    bw_negative_color: List[RGBColorOption],
     bw_plot_type: List[BigWigPlotTypeOption],
     vcf_show_genotypes: List[bool],
+    gtf_display_mode: List[GtfDisplayModeOption],
 ):
     if not names:
         # If names list is not provided, set it to the file name
@@ -127,7 +131,7 @@ def generate_igv_session(
         raise ValueError(f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal.")
 
     # Hanlde bam/cram specific arguments
-    alignment_files = [file for file in files if file.name.endswith(".bam") or file.name.endswith(".cram")]
+    alignment_files = [file for file in files if file.suffix in ALIGNMENT_SUFFIXES]
     if alignment_files:
         bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
         bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
@@ -141,7 +145,7 @@ def generate_igv_session(
         # If group_by_phase and color_by_methylation are not provided, set them to False
 
     # Handle BigWig specific arguments
-    bigwig_files = [file for file in files if file.name.endswith(".bw") or file.name.endswith(".bigwig") or file.name.endswith(".wig")]
+    bigwig_files = [file for file in files if file.suffix in BIGWIG_SUFFIXES]
     if bigwig_files:
         bw_color = hanlde_attribute("bw_color", bw_color, bigwig_files, "bigwig files")
         bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
@@ -152,6 +156,11 @@ def generate_igv_session(
     vcf_files = [file for file in files if file.name.endswith(".vcf.gz") or file.name.endswith(".vcf")]
     if vcf_files:
         vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
+
+    # Handle GTF specific arguments
+    gtf_files = [file for file in files if file.suffix in GTF_SUFFIXES]
+    if gtf_files:
+        gtf_display_mode = hanlde_attribute("gtf_display_mode", gtf_display_mode, gtf_files, "gtf files")
 
     # Cycles for attribute sublists
     # Allignment files
@@ -173,10 +182,13 @@ def generate_igv_session(
     # VCF files
     vcf_show_genotypes_cycle = cycle(vcf_show_genotypes)
 
+    # Gtf files
+    gtf_display_mode_cycle = cycle(gtf_display_mode)
+
     # Create tracks
     tracks: List[DataTrack] = []
     for file, name, height in zip(files, names, heights):
-        if file.name.endswith(".bam") or file.name.endswith(".cram"):
+        if file.suffix in ALIGNMENT_SUFFIXES:
             # Hanlde bam/cram specific arguments
             tracks.append(
                 AllignmentTrack(
@@ -193,7 +205,7 @@ def generate_igv_session(
                     show_junctions=next(bam_show_junctions_cycle),
                 )
             )
-        elif file.name.endswith(".bw") or file.name.endswith(".bigwig") or file.name.endswith(".wig"):
+        elif file.suffix in BIGWIG_SUFFIXES:
             # Handle BigWig specific arguments
             tracks.append(
                 BigWigTrack(
@@ -206,7 +218,7 @@ def generate_igv_session(
                     plot_type=next(bw_plot_type_cycle),
                 )
             )
-        elif file.name.endswith(".vcf.gz") or file.name.endswith(".vcf"):
+        elif file.suffix in VCF_SUFFIXES:
             # Handle VCF specific arguments
             tracks.append(
                 VariantTrack(
@@ -214,6 +226,16 @@ def generate_igv_session(
                     path=file,
                     height=height,
                     show_genotypes=next(vcf_show_genotypes_cycle),
+                )
+            )
+        elif file.suffix in GTF_SUFFIXES:
+            # Handle GTF specific arguments
+            tracks.append(
+                GtfTrack(
+                    name=name,
+                    path=file,
+                    height=height,
+                    display_mode=next(gtf_display_mode_cycle),
                 )
             )
         # Handle other files
