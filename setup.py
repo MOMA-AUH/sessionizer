@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="sessionizer",
-    version="0.2.1",
+    version="0.2.2",
     packages=find_packages("src"),
     package_dir={"": "src"},
     entry_points={"console_scripts": ["sessionizer = sessionizer.main:app"]},
