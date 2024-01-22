@@ -104,4 +104,4 @@ def test_multiple_files():
             "phase",
         ],
     )
-    assert result.exit_code == 2
+    assert result.exit_code == 1
