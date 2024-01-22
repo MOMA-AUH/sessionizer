@@ -23,10 +23,8 @@ GTF_SUFFIXES = [
 FILE_INDEX_EXTENSIONS = {
     ".bam": ".bai",
     ".cram": ".crai",
-    ".vcf": ".tbi",
     ".vcf.gz": ".tbi",
     ".fasta": ".fai",
     ".FASTA": ".fai",
-    ".bed": ".tbi",
     ".bed.gz": ".tbi",
 }
