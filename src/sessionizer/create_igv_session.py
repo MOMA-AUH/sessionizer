@@ -1,4 +1,3 @@
-import os
 import xml.etree.ElementTree as ET
 from itertools import cycle
 from pathlib import Path
@@ -118,7 +117,7 @@ def generate_igv_session(
 ):
     if not names:
         # If names list is not provided, set it to the file name
-        names = [os.path.basename(file) for file in files]
+        names = [file.name for file in files]
     elif len(files) != len(names):
         # Check if the lengths of file lists and names lists are equal
         raise ValueError(f"Length of files ({len(files)}) and names ({len(names)}) must be equal.")

@@ -1,4 +1,3 @@
-import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from enum import Enum
@@ -137,7 +136,7 @@ class AllignmentTrack(DataTrack):
         ET.SubElement(
             session_panel,
             "Track",
-            id=os.path.basename(self.path) + "_coverage",
+            id=self.path.name + "_coverage",
             visible=str(self.show_coverage).lower(),
         )
 
@@ -145,7 +144,7 @@ class AllignmentTrack(DataTrack):
         ET.SubElement(
             session_panel,
             "Track",
-            id=os.path.basename(self.path) + "_junctions",
+            id=self.path.name + "_junctions",
             visible=str(self.show_junctions).lower(),
         )
 

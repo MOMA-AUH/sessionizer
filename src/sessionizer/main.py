@@ -1,4 +1,3 @@
-import os
 import re
 from pathlib import Path
 from typing import List
@@ -233,8 +232,8 @@ def run(
             raise ValueError("Output needs to be given if generate_symlinks is True")
 
         # Generate symlinks
-        igv_shortcut_dir = os.path.join(os.path.dirname(output), "igv_shortcuts")
-        os.makedirs(igv_shortcut_dir, exist_ok=True)
+        igv_shortcut_dir = output.parent / "igv_shortcuts"
+        igv_shortcut_dir.mkdir(parents=True, exist_ok=True)
         file = [generate_symlink(igv_shortcut_dir, file) for file in file]
 
         if genome_path:
@@ -249,7 +248,7 @@ def run(
         file = [Path(f).relative_to(output.parent.absolute(), walk_up=True) for f in file]
 
         if genome_path:
-            genome_path = os.path.relpath(path=genome_path, start=os.path.dirname(output))
+            genome_path = Path(genome_path).relative_to(output.parent.absolute(), walk_up=True)
 
     # Generate XML
     xml_str = generate_igv_session(
