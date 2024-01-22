@@ -187,7 +187,7 @@ def generate_igv_session(
     # Create tracks
     tracks: List[DataTrack] = []
     for file, name, height in zip(files, names, heights):
-        if file.suffix in ALIGNMENT_SUFFIXES:
+        if any(file.name.endswith(suffix) for suffix in ALIGNMENT_SUFFIXES):
             # Hanlde bam/cram specific arguments
             tracks.append(
                 AllignmentTrack(
@@ -204,7 +204,7 @@ def generate_igv_session(
                     show_junctions=next(bam_show_junctions_cycle),
                 )
             )
-        elif file.suffix in BIGWIG_SUFFIXES:
+        elif any(file.name.endswith(suffix) for suffix in BIGWIG_SUFFIXES):
             # Handle BigWig specific arguments
             tracks.append(
                 BigWigTrack(
@@ -217,7 +217,7 @@ def generate_igv_session(
                     plot_type=next(bw_plot_type_cycle),
                 )
             )
-        elif file.suffix in VCF_SUFFIXES:
+        elif any(file.name.endswith(suffix) for suffix in VCF_SUFFIXES):
             # Handle VCF specific arguments
             tracks.append(
                 VariantTrack(
@@ -227,7 +227,7 @@ def generate_igv_session(
                     show_genotypes=next(vcf_show_genotypes_cycle),
                 )
             )
-        elif file.suffix in GTF_SUFFIXES:
+        elif any(file.name.endswith(suffix) for suffix in GTF_SUFFIXES):
             # Handle GTF specific arguments
             tracks.append(
                 GtfTrack(

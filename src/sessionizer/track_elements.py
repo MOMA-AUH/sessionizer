@@ -211,11 +211,11 @@ class BigWigTrack(DataTrack):
                 "DataRange",
                 type="LINEAR",
             )
-            if self.range.minimum:
+            if self.range.minimum is not None:
                 range_elem.set("minimum", str(self.range.minimum))
-            if self.range.baseline:
+            if self.range.baseline is not None:
                 range_elem.set("baseline", str(self.range.baseline))
-            if self.range.maximum:
+            if self.range.maximum is not None:
                 range_elem.set("maximum", str(self.range.maximum))
         return track_elem
 
@@ -252,6 +252,6 @@ class GtfTrack(DataTrack):
         track_elem = super().add_track(session_panel)
 
         # Add attributes for GTF track
-        track_elem.set("displayMode", self.display_mode)
+        track_elem.set("displayMode", self.display_mode.name)
 
         return track_elem

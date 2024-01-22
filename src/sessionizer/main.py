@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 from typing import List
 
@@ -16,24 +15,9 @@ from sessionizer.track_elements import (
     BigWigRangeOption,
     GtfDisplayModeOption,
 )
-from sessionizer.utils import generate_symlink
+from sessionizer.utils import bw_range_parser, generate_symlink
 
 app = typer.Typer(rich_markup_mode="rich")
-
-
-def bw_range_parser(value: str):
-    if not re.match(r"^\d+(\.\d+)?,\d+(\.\d+)?(,\d+(\.\d+)?)?$", value):
-        raise ValueError(f"The bw_range {value} does not fit the pattern float,float (min,max) or float,float,float (min,mid,max).")
-
-    # If range has 2 numbers: extract and set min and max
-    if value.count(",") == 1:
-        minimum, maximum = map(float, value.split(","))
-        baseline = None
-    # If range has 3 numbers: min, mid, max
-    elif value.count(",") == 2:
-        minimum, baseline, maximum = map(float, value.split(","))
-
-    return BigWigRangeOption(minimum=minimum, baseline=baseline, maximum=maximum)
 
 
 # Options sections
