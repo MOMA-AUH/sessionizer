@@ -38,3 +38,7 @@ def bw_range_parser(value: str):
         minimum, baseline, maximum = map(float, value.split(","))
 
     return BigWigRangeOption(minimum=minimum, baseline=baseline, maximum=maximum)
+
+
+def filter_files_by_filetype(files, suffix_list):
+    return [file for file in files for suffix in suffix_list if file.name.endswith(suffix)]

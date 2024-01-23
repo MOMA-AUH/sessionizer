@@ -20,6 +20,7 @@ from sessionizer.track_elements import (
     GtfTrack,
     VariantTrack,
 )
+from sessionizer.utils import filter_files_by_filetype
 
 
 def hanlde_attribute(attribute: str, values: List, files: List, file_type: str) -> List:
@@ -103,11 +104,11 @@ def generate_igv_session(
     bam_group_by: List[AllignmentGroupByOption],
     bam_color_by: List[AllignmentColorByOption],
     bam_display_mode: List[AllignmentDisplayModeOption],
-    bam_hide_small_indels: bool,
-    bam_small_indel_threshold: int,
-    bam_quick_consensus_mode: bool,
-    bam_show_coverage: bool,
-    bam_show_junctions: bool,
+    bam_hide_small_indels: List[bool],
+    bam_small_indel_threshold: List[int],
+    bam_quick_consensus_mode: List[bool],
+    bam_show_coverage: List[bool],
+    bam_show_junctions: List[bool],
     bw_ranges: List[BigWigRangeOption],
     bw_color: List[RGBColorOption],
     bw_negative_color: List[RGBColorOption],
@@ -130,7 +131,7 @@ def generate_igv_session(
         raise ValueError(f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal.")
 
     # Hanlde bam/cram specific arguments
-    alignment_files = [file for file in files if file.suffix in ALIGNMENT_SUFFIXES]
+    alignment_files = filter_files_by_filetype(files, ALIGNMENT_SUFFIXES)
     if alignment_files:
         bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
         bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
@@ -144,7 +145,7 @@ def generate_igv_session(
         # If group_by_phase and color_by_methylation are not provided, set them to False
 
     # Handle BigWig specific arguments
-    bigwig_files = [file for file in files if file.suffix in BIGWIG_SUFFIXES]
+    bigwig_files = filter_files_by_filetype(files, BIGWIG_SUFFIXES)
     if bigwig_files:
         bw_color = hanlde_attribute("bw_color", bw_color, bigwig_files, "bigwig files")
         bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
@@ -152,12 +153,12 @@ def generate_igv_session(
         bw_ranges = hanlde_attribute("bw_ranges", bw_ranges, bigwig_files, "bigwig files")
 
     # Handle VCF specific arguments
-    vcf_files = [file for file in files if file.name.endswith(".vcf.gz") or file.name.endswith(".vcf")]
+    vcf_files = filter_files_by_filetype(files, VCF_SUFFIXES)
     if vcf_files:
         vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
 
     # Handle GTF specific arguments
-    gtf_files = [file for file in files if file.suffix in GTF_SUFFIXES]
+    gtf_files = filter_files_by_filetype(files, GTF_SUFFIXES)
     if gtf_files:
         gtf_display_mode = hanlde_attribute("gtf_display_mode", gtf_display_mode, gtf_files, "gtf files")
 
