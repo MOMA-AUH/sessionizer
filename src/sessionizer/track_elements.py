@@ -110,7 +110,7 @@ class DataTrack:
             session_panel,
             "Track",
             name=self.name,
-            id=self.path.name,
+            id=str(self.path),
         )
         if self.height is not None:
             track_elem.set("height", str(self.height))
@@ -136,7 +136,7 @@ class AllignmentTrack(DataTrack):
         ET.SubElement(
             session_panel,
             "Track",
-            id=self.path.name + "_coverage",
+            id=f"{self.path}_coverage",
             visible=str(self.show_coverage).lower(),
         )
 
@@ -144,7 +144,7 @@ class AllignmentTrack(DataTrack):
         ET.SubElement(
             session_panel,
             "Track",
-            id=self.path.name + "_junctions",
+            id=f"{self.path}_junctions",
             visible=str(self.show_junctions).lower(),
         )
 
@@ -152,8 +152,6 @@ class AllignmentTrack(DataTrack):
         track_elem = super().add_track(session_panel)
 
         # Add attributes for BAM track
-        track_elem.set("groupBy", str(self.group_by.name))
-        track_elem.set("colorBy", str(self.color_by.name))
         track_elem.set("displayMode", str(self.display_mode.name))
 
         # Add RenderOptions:
@@ -161,6 +159,8 @@ class AllignmentTrack(DataTrack):
             track_elem,
             "RenderOptions",
         )
+        render_options.set("colorOption", str(self.color_by.name))
+        render_options.set("groupByOption", str(self.group_by.name))
         render_options.set("hideSmallIndels", str(self.hide_small_indels).lower())
         render_options.set("smallIndelThreshold", str(self.small_indel_threshold))
         render_options.set("quickConsensusMode", str(self.quick_consensus_mode).lower())
@@ -185,6 +185,7 @@ class BigWigTrack(DataTrack):
     - range: The range of the track.
     - color: The color of the track.
     - negative_color: The color for negative values in the track.
+    - autoscale: Whether to autoscale the track values.
 
     """
 
@@ -192,6 +193,7 @@ class BigWigTrack(DataTrack):
     range: BigWigRangeOption
     color: RGBColorOption
     negative_color: RGBColorOption
+    autoscale: bool
 
     # Method for adding track to IGV session
     def add_track(self, session_panel: ET.Element):
@@ -205,6 +207,9 @@ class BigWigTrack(DataTrack):
             track_elem.set("altColor", self.negative_color.rgb_values())
         if self.plot_type != BigWigPlotTypeOption.NONE:
             track_elem.set("renderer", self.plot_type.name)
+        track_elem.set("autoScale", str(self.autoscale).lower())
+
+        # Add DataRange element
         if self.range is not None:
             range_elem = ET.SubElement(
                 track_elem,
@@ -223,6 +228,7 @@ class BigWigTrack(DataTrack):
 @dataclass
 class VariantTrack(DataTrack):
     show_genotypes: bool
+    feature_visibility_window: int
 
     def add_track(self, session_panel: ET.Element):
         # Create track element using super class method
@@ -230,6 +236,7 @@ class VariantTrack(DataTrack):
 
         # Add attributes for variant track
         track_elem.set("showGenotypes", str(self.show_genotypes).lower())
+        track_elem.set("featureVisibilityWindow", str(self.feature_visibility_window))
 
         return track_elem
 

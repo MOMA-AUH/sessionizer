@@ -56,7 +56,9 @@ class TestCreateIgvSession(unittest.TestCase):
             bw_color=[RGBColorOption.NONE],
             bw_negative_color=[RGBColorOption.NONE],
             bw_plot_type=[BigWigPlotTypeOption.NONE],
+            bw_auto_scale=[False],
             vcf_show_genotypes=[False],
+            vcf_feature_visibility_window=[0],
             gtf_display_mode=[GtfDisplayModeOption.COLLAPSED],
         )
 
@@ -82,7 +84,9 @@ class TestCreateIgvSession(unittest.TestCase):
             bw_color=[RGBColorOption.NONE],
             bw_negative_color=[RGBColorOption.NONE],
             bw_plot_type=[BigWigPlotTypeOption.NONE],
+            bw_auto_scale=[False],
             vcf_show_genotypes=[False],
+            vcf_feature_visibility_window=[0],
             gtf_display_mode=[GtfDisplayModeOption.COLLAPSED],
         )
 
@@ -92,6 +96,7 @@ class TestCreateIgvSession(unittest.TestCase):
             # Relevant arguments
             files=[self.input_vcf_gz],
             vcf_show_genotypes=[],
+            vcf_feature_visibility_window=[],
             # Other arguments
             names=[],
             heights=[],
@@ -109,6 +114,7 @@ class TestCreateIgvSession(unittest.TestCase):
             bw_color=[RGBColorOption.NONE],
             bw_negative_color=[RGBColorOption.NONE],
             bw_plot_type=[BigWigPlotTypeOption.NONE],
+            bw_auto_scale=[False],
             gtf_display_mode=[GtfDisplayModeOption.COLLAPSED],
         )
 
@@ -118,6 +124,7 @@ class TestCreateIgvSession(unittest.TestCase):
             # Relevant arguments
             files=[self.input_vcf_gz],
             vcf_show_genotypes=[False, False],
+            vcf_feature_visibility_window=[10, 1000],
             # Other arguments
             names=[],
             heights=[],
@@ -135,6 +142,7 @@ class TestCreateIgvSession(unittest.TestCase):
             bw_color=[RGBColorOption.NONE],
             bw_negative_color=[RGBColorOption.NONE],
             bw_plot_type=[BigWigPlotTypeOption.NONE],
+            bw_auto_scale=[False],
             gtf_display_mode=[GtfDisplayModeOption.COLLAPSED],
         )
 
@@ -161,7 +169,9 @@ class TestCreateIgvSession(unittest.TestCase):
             bw_color=[RGBColorOption.NONE],
             bw_negative_color=[RGBColorOption.NONE],
             bw_plot_type=[BigWigPlotTypeOption.NONE],
+            bw_auto_scale=[False],
             vcf_show_genotypes=[False],
+            vcf_feature_visibility_window=[10],
         )
 
         self.assertRaises(
@@ -187,5 +197,7 @@ class TestCreateIgvSession(unittest.TestCase):
             bw_color=[RGBColorOption.NONE],
             bw_negative_color=[RGBColorOption.NONE],
             bw_plot_type=[BigWigPlotTypeOption.NONE],
+            bw_auto_scale=[False],
             vcf_show_genotypes=[False],
+            vcf_feature_visibility_window=[1000],
         )

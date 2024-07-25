@@ -24,14 +24,12 @@ from sessionizer.utils import filter_files_by_filetype
 
 
 def hanlde_attribute(attribute: str, values: List, files: List, file_type: str) -> List:
-    if len(values) != len(files) and len(values) != 1:
+    if len(values) not in [len(files), 1]:
         raise ValueError(f"Length of {attribute} ({len(values)}) must be 1 or equal to the number of {file_type} ({len(files)}).")
-    if len(values) == 1:
-        return values * len(files)
-    return values
+    return values * len(files) if len(values) == 1 else values
 
 
-def generate_xml(genome: GENOME, genome_path: str, tracks: List[DataTrack]) -> str:
+def generate_xml(genome: GENOME, genome_path: Path, tracks: List[DataTrack]) -> str:
     # Initialize session xml
     root = ET.Element("Session")
 
@@ -66,10 +64,12 @@ def generate_xml(genome: GENOME, genome_path: str, tracks: List[DataTrack]) -> s
     # Add genes
     gene_ids = []
 
-    if genome == "hg38":
-        gene_ids = ["hg38_genes"]
-    elif genome == "hg19":
+    if genome == "hg19":
         gene_ids = ["hg19_genes"]
+    elif genome == "hg38":
+        gene_ids = [
+            "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/ncbiRefSeq.txt.gz",
+        ]
     elif genome == "t2t":
         gene_ids = [
             "https://hgdownload.soe.ucsc.edu/hubs/GCA/009/914/755/GCA_009914755.4/bbi/GCA_009914755.4_T2T-CHM13v2.0.catLiftOffGenesV1/catLiftOffGenesV1.bb",
@@ -113,7 +113,9 @@ def generate_igv_session(
     bw_color: List[RGBColorOption],
     bw_negative_color: List[RGBColorOption],
     bw_plot_type: List[BigWigPlotTypeOption],
+    bw_auto_scale: List[bool],
     vcf_show_genotypes: List[bool],
+    vcf_feature_visibility_window: List[int],
     gtf_display_mode: List[GtfDisplayModeOption],
 ):
     if not names:
@@ -151,11 +153,13 @@ def generate_igv_session(
         bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
         bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
         bw_ranges = hanlde_attribute("bw_ranges", bw_ranges, bigwig_files, "bigwig files")
+        bw_auto_scale = hanlde_attribute("bw_auto_scale", bw_auto_scale, bigwig_files, "bigwig files")
 
     # Handle VCF specific arguments
     vcf_files = filter_files_by_filetype(files, VCF_SUFFIXES)
     if vcf_files:
         vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
+        vcf_feature_visibility_window = hanlde_attribute("vcf_feature_visibility_window", vcf_feature_visibility_window, vcf_files, "vcf files")
 
     # Handle GTF specific arguments
     gtf_files = filter_files_by_filetype(files, GTF_SUFFIXES)
@@ -178,9 +182,11 @@ def generate_igv_session(
     bw_color_cycle = cycle(bw_color)
     bw_negative_color_cycle = cycle(bw_negative_color)
     bw_plot_type_cycle = cycle(bw_plot_type)
+    bw_auto_scale_cycle = cycle(bw_auto_scale)
 
     # VCF files
     vcf_show_genotypes_cycle = cycle(vcf_show_genotypes)
+    vcf_feature_visibility_window_cycle = cycle(vcf_feature_visibility_window)
 
     # Gtf files
     gtf_display_mode_cycle = cycle(gtf_display_mode)
@@ -216,6 +222,7 @@ def generate_igv_session(
                     color=next(bw_color_cycle),
                     negative_color=next(bw_negative_color_cycle),
                     plot_type=next(bw_plot_type_cycle),
+                    autoscale=next(bw_auto_scale_cycle),
                 )
             )
         elif any(file.name.endswith(suffix) for suffix in VCF_SUFFIXES):
@@ -226,6 +233,7 @@ def generate_igv_session(
                     path=file,
                     height=height,
                     show_genotypes=next(vcf_show_genotypes_cycle),
+                    feature_visibility_window=next(vcf_feature_visibility_window_cycle),
                 )
             )
         elif any(file.name.endswith(suffix) for suffix in GTF_SUFFIXES):
@@ -248,6 +256,4 @@ def generate_igv_session(
                 )
             )
 
-    # Create the root element
-    xml_str = generate_xml(genome, genome_path, tracks)
-    return xml_str
+    return generate_xml(genome, genome_path, tracks)

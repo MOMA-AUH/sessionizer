@@ -179,6 +179,13 @@ def run(
             rich_help_panel=BIGWIG_OPTIONS,
         ),
     ] = [BigWigPlotTypeOption.BAR_CHART],
+    bw_auto_scale: Annotated[
+        List[bool],
+        typer.Option(
+            help="Parameter to set bw autoscale",
+            rich_help_panel=BIGWIG_OPTIONS,
+        ),
+    ] = [True],
     # Variant options
     vcf_show_genotypes: Annotated[
         List[bool],
@@ -187,6 +194,13 @@ def run(
             rich_help_panel=VARIANT_OPTIONS,
         ),
     ] = [False],
+    vcf_feature_visibility_window: Annotated[
+        List[int],
+        typer.Option(
+            help="Parameter to set feature visibility window for vcf tracks.",
+            rich_help_panel=VARIANT_OPTIONS,
+        ),
+    ] = [100000],
     # Gtf options
     gtf_display_mode: Annotated[
         List[GtfDisplayModeOption],
@@ -253,7 +267,9 @@ def run(
         bw_color=bw_color,
         bw_negative_color=bw_negative_color,
         bw_plot_type=bw_plot_type,
+        bw_auto_scale=bw_auto_scale,
         vcf_show_genotypes=vcf_show_genotypes,
+        vcf_feature_visibility_window=vcf_feature_visibility_window,
         gtf_display_mode=gtf_display_mode,
     )
 

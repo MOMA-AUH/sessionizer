@@ -76,7 +76,7 @@ class TestAppAlignment(unittest.TestCase):
         )
 
         assert result.exit_code == 0
-        assert 'groupBy="PHASE"' in result.output
+        assert 'groupByOption="PHASE"' in result.output
 
         result = self.runner.invoke(
             app,
@@ -89,7 +89,7 @@ class TestAppAlignment(unittest.TestCase):
         )
 
         assert result.exit_code == 0
-        assert 'groupBy="BASE_AT_POS"' in result.output
+        assert 'groupByOption="BASE_AT_POS"' in result.output
 
     def test_multiple_files(self):
         result = self.runner.invoke(
