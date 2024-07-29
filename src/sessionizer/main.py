@@ -42,10 +42,10 @@ def run(
     output: Annotated[
         Path,
         typer.Option(
-            help="Output XML session file. If not specified, session will be printed to stdout.",
+            help="Output XML session file.",
             exists=False,
         ),
-    ] = None,
+    ],
     # Genome options
     genome: Annotated[
         GENOME,
@@ -61,7 +61,7 @@ def run(
             rich_help_panel=GENOME_OPTIONS,
             exists=True,
         ),
-    ] = None,
+    ] = None,  # type: ignore
     # Input files options
     use_relative_paths: Annotated[
         bool,
@@ -81,17 +81,17 @@ def run(
     name: Annotated[
         List[str],
         typer.Option(
-            help="Name shown in IGV for input file (can be used multiple times)",
+            help="Name shown in IGV for input file. Needs to be used the same number of times as the --file parameter, if provided. Provide an empty string if file name should be used.",
             rich_help_panel=TRACK_OPTIONS,
         ),
-    ] = None,
+    ] = [""],
     height: Annotated[
         List[int],
         typer.Option(
-            help="Height of track in IGV (can be used multiple times)",
+            help="Height of track in IGV. Needs to be used the same number of times as the --file parameter, if provided. Provide 0 for auto height.",
             rich_help_panel=TRACK_OPTIONS,
         ),
-    ] = None,
+    ] = [0],
     # Alignment options
     bam_group_by: Annotated[
         List[AllignmentGroupByOption],
@@ -128,13 +128,6 @@ def run(
             rich_help_panel=ALIGNMENT_OPTIONS,
         ),
     ] = [0],
-    bam_quick_consensus_mode: Annotated[
-        List[bool],
-        typer.Option(
-            help="Parameter to use quick consensus mode on bams.",
-            rich_help_panel=ALIGNMENT_OPTIONS,
-        ),
-    ] = [False],
     bam_show_coverage: Annotated[
         List[bool],
         typer.Option(
@@ -157,7 +150,9 @@ def run(
             rich_help_panel=BIGWIG_OPTIONS,
             parser=bw_range_parser,
         ),
-    ] = [None],
+    ] = [
+        "0,0,10"
+    ],  # type: ignore
     bw_color: Annotated[
         List[RGBColorOption],
         typer.Option(
@@ -200,7 +195,7 @@ def run(
             help="Parameter to set feature visibility window for vcf tracks.",
             rich_help_panel=VARIANT_OPTIONS,
         ),
-    ] = [100000],
+    ] = [1000000],
     # Gtf options
     gtf_display_mode: Annotated[
         List[GtfDisplayModeOption],
@@ -225,28 +220,27 @@ def run(
     """
     # If generate_symlinks is True, create symlinks to the input files
     if generate_symlinks:
-        # Raise error if output is not given
-        if not output:
-            raise ValueError("Output needs to be given if generate_symlinks is True")
-
         # Generate symlinks
         igv_shortcut_dir = output.parent / "igv_shortcuts"
         igv_shortcut_dir.mkdir(parents=True, exist_ok=True)
         file = [generate_symlink(igv_shortcut_dir, file) for file in file]
 
-        if genome_path:
+        if genome_path is not None:
             genome_path = generate_symlink(igv_shortcut_dir, genome_path)
 
     # If use_relative_paths is True, create paths to the input files relative to the output file
     if use_relative_paths:
-        # Raise error if output is not given
-        if not output:
-            raise ValueError("Output needs to be given if use_relative_paths is True")
-
         file = [Path(f).relative_to(output.parent.absolute(), walk_up=True) for f in file]
 
-        if genome_path:
+        if genome_path is not None:
             genome_path = Path(genome_path).relative_to(output.parent.absolute(), walk_up=True)
+
+    # Check genome_path is given if genome is set to custom
+    if genome_path is None:
+        if genome == GENOME.CUSTOM:
+            raise ValueError("Genome path needs to be given if genome is set")
+        else:
+            genome_path = Path("")
 
     # Generate XML
     xml_str = generate_igv_session(
@@ -260,7 +254,6 @@ def run(
         bam_display_mode=bam_display_mode,
         bam_hide_small_indels=bam_hide_small_indels,
         bam_small_indel_threshold=bam_small_indel_threshold,
-        bam_quick_consensus_mode=bam_quick_consensus_mode,
         bam_show_coverage=bam_show_coverage,
         bam_show_junctions=bam_show_junctions,
         bw_ranges=bw_ranges,
@@ -273,12 +266,9 @@ def run(
         gtf_display_mode=gtf_display_mode,
     )
 
-    # Write XML to standard output
-    if not output:
-        print(xml_str)
-    else:
-        with open(output, "w", encoding="utf-8") as f:
-            f.write(xml_str)
+    # Write XML to output file
+    with open(output, "w", encoding="utf-8") as f:
+        f.write(xml_str)
 
 
 if __name__ == "__main__":

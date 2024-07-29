@@ -20,7 +20,7 @@ class RGBColorOption(str, Enum):
     NAVY = "navy"
     NONE = "none"
 
-    def rgb_values(self):
+    def rgb_values(self) -> str:
         rgb_mapping = {
             RGBColorOption.BLACK: "0,0,0",
             RGBColorOption.WHITE: "255,255,255",
@@ -38,12 +38,11 @@ class RGBColorOption(str, Enum):
             RGBColorOption.PURPLE: "128,0,128",
             RGBColorOption.TEAL: "0,128,128",
             RGBColorOption.NAVY: "0,0,128",
-            RGBColorOption.NONE: None,
         }
         if self not in rgb_mapping:
-            raise ValueError(f"RGB color {self} is not valid.")
+            raise ValueError(f"Color {self} does not have an RGB mapping.")
 
-        return rgb_mapping.get(self)
+        return rgb_mapping[self]
 
     def __str__(self):
         return self.value

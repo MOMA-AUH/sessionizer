@@ -97,8 +97,8 @@ def generate_xml(genome: GENOME, genome_path: Path, tracks: List[DataTrack]) -> 
 
 def generate_igv_session(
     files: List[Path],
-    names: List[str] | None,
-    heights: List[int] | None,
+    names: List[str],
+    heights: List[int],
     genome: GENOME,
     genome_path: Path,
     bam_group_by: List[AllignmentGroupByOption],
@@ -106,7 +106,6 @@ def generate_igv_session(
     bam_display_mode: List[AllignmentDisplayModeOption],
     bam_hide_small_indels: List[bool],
     bam_small_indel_threshold: List[int],
-    bam_quick_consensus_mode: List[bool],
     bam_show_coverage: List[bool],
     bam_show_junctions: List[bool],
     bw_ranges: List[BigWigRangeOption],
@@ -118,17 +117,19 @@ def generate_igv_session(
     vcf_feature_visibility_window: List[int],
     gtf_display_mode: List[GtfDisplayModeOption],
 ):
-    if not names:
-        # If names list is not provided, set it to the file name
-        names = [file.name for file in files]
-    elif len(files) != len(names):
+    # If names list is empty, set it to empty strings
+    if names == [""]:
+        names = [""] * len(files)
+    # Check if the lengths of file lists and names lists are equal
+    if len(files) != len(names):
         # Check if the lengths of file lists and names lists are equal
         raise ValueError(f"Length of files ({len(files)}) and names ({len(names)}) must be equal.")
+    # Convert empty strings to file names
+    names = [file.name if name == "" else name for file, name in zip(files, names)]
 
-    if not heights:
-        # If heights list is not provided, set it to none
-        heights = [None] * len(files)
-    elif len(files) != len(heights):
+    if len(heights) == 1:
+        heights = [0] * len(files)
+    if len(files) != len(heights):
         # Check if the lengths of file lists and heights lists are equal
         raise ValueError(f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal.")
 
@@ -140,7 +141,6 @@ def generate_igv_session(
         bam_display_mode = hanlde_attribute("bam_display_mode", bam_display_mode, alignment_files, "alignment files")
         bam_hide_small_indels = hanlde_attribute("bam_hide_small_indels", bam_hide_small_indels, alignment_files, "alignment files")
         bam_small_indel_threshold = hanlde_attribute("bam_small_indel_threshold", bam_small_indel_threshold, alignment_files, "alignment files")
-        bam_quick_consensus_mode = hanlde_attribute("bam_quick_consensus_mode", bam_quick_consensus_mode, alignment_files, "alignment files")
         bam_show_coverage = hanlde_attribute("bam_show_coverage", bam_show_coverage, alignment_files, "alignment files")
         bam_show_junctions = hanlde_attribute("bam_show_junctions", bam_show_junctions, alignment_files, "alignment files")
 
@@ -173,7 +173,6 @@ def generate_igv_session(
     bam_display_mode_cycle = cycle(bam_display_mode)
     bam_hide_small_indels_cycle = cycle(bam_hide_small_indels)
     bam_small_indel_threshold_cycle = cycle(bam_small_indel_threshold)
-    bam_quick_consensus_mode_cycle = cycle(bam_quick_consensus_mode)
     bam_show_coverage_cycle = cycle(bam_show_coverage)
     bam_show_junctions_cycle = cycle(bam_show_junctions)
 
@@ -205,7 +204,6 @@ def generate_igv_session(
                     color_by=next(bam_color_by_cycle),
                     hide_small_indels=next(bam_hide_small_indels_cycle),
                     small_indel_threshold=next(bam_small_indel_threshold_cycle),
-                    quick_consensus_mode=next(bam_quick_consensus_mode_cycle),
                     display_mode=next(bam_display_mode_cycle),
                     show_coverage=next(bam_show_coverage_cycle),
                     show_junctions=next(bam_show_junctions_cycle),

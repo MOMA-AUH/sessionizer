@@ -93,7 +93,7 @@ class BigWigPlotTypeOption(str, Enum):
 class DataTrack:
     name: str
     path: Path
-    height: int | None
+    height: int
 
     file_type: str = field(init=False)
 
@@ -112,7 +112,7 @@ class DataTrack:
             name=self.name,
             id=str(self.path),
         )
-        if self.height is not None:
+        if self.height != 0:
             track_elem.set("height", str(self.height))
 
         return track_elem
@@ -126,7 +126,6 @@ class AllignmentTrack(DataTrack):
 
     hide_small_indels: bool
     small_indel_threshold: int
-    quick_consensus_mode: bool
 
     show_coverage: bool
     show_junctions: bool
@@ -163,16 +162,15 @@ class AllignmentTrack(DataTrack):
         render_options.set("groupByOption", str(self.group_by.name))
         render_options.set("hideSmallIndels", str(self.hide_small_indels).lower())
         render_options.set("smallIndelThreshold", str(self.small_indel_threshold))
-        render_options.set("quickConsensusMode", str(self.quick_consensus_mode).lower())
 
         return track_elem
 
 
 @dataclass
 class BigWigRangeOption:
-    minimum: float | None
-    baseline: float | None
-    maximum: float | None
+    minimum: float
+    baseline: float
+    maximum: float
 
 
 @dataclass

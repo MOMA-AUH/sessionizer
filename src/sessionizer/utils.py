@@ -32,7 +32,7 @@ def bw_range_parser(value: str):
     # If range has 2 numbers: extract and set min and max
     if value.count(",") == 1:
         minimum, maximum = map(float, value.split(","))
-        baseline = None
+        baseline = minimum
     # If range has 3 numbers: min, mid, max
     elif value.count(",") == 2:
         minimum, baseline, maximum = map(float, value.split(","))

@@ -96,5 +96,5 @@ class TestBigWigRangeParser(unittest.TestCase):
         # Test min and max values
         result = bw_range_parser("1,7")
         assert result.minimum == 1
-        assert result.baseline is None
+        assert result.baseline == 1
         assert result.maximum == 7

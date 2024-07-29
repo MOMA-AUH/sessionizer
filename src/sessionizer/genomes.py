@@ -7,7 +7,7 @@ class GENOME(str, Enum):
     T2T = "t2t"
     CUSTOM = "custom"
 
-    def get_igv_name(self):
+    def get_igv_name(self) -> str:
         genome_mapping = {
             GENOME.HG19: "hg19",
             GENOME.HG38: "hg38",
@@ -18,7 +18,7 @@ class GENOME(str, Enum):
         if self not in genome_mapping:
             raise ValueError(f"Genome {self} is not valid.")
 
-        return genome_mapping.get(self)
+        return genome_mapping[self]
 
     def __str__(self):
         return self.value
