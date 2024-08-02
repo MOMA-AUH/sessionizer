@@ -107,6 +107,13 @@ def run(
             rich_help_panel=ALIGNMENT_OPTIONS,
         ),
     ] = [AllignmentColorByOption.NONE],
+    bam_color_by_tag: Annotated[
+        List[str],
+        typer.Option(
+            help="Parameter to color bams by tag.",
+            rich_help_panel=ALIGNMENT_OPTIONS,
+        ),
+    ] = [""],
     bam_display_mode: Annotated[
         List[AllignmentDisplayModeOption],
         typer.Option(
@@ -251,6 +258,7 @@ def run(
         genome_path=genome_path,
         bam_group_by=bam_group_by,
         bam_color_by=bam_color_by,
+        bam_color_by_tag=bam_color_by_tag,
         bam_display_mode=bam_display_mode,
         bam_hide_small_indels=bam_hide_small_indels,
         bam_small_indel_threshold=bam_small_indel_threshold,

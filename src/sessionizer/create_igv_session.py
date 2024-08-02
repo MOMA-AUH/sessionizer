@@ -103,6 +103,7 @@ def generate_igv_session(
     genome_path: Path,
     bam_group_by: List[AllignmentGroupByOption],
     bam_color_by: List[AllignmentColorByOption],
+    bam_color_by_tag: List[str],
     bam_display_mode: List[AllignmentDisplayModeOption],
     bam_hide_small_indels: List[bool],
     bam_small_indel_threshold: List[int],
@@ -138,6 +139,7 @@ def generate_igv_session(
     if alignment_files:
         bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
         bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
+        bam_color_by_tag = hanlde_attribute("bam_color_by_tag", bam_color_by_tag, alignment_files, "alignment files")
         bam_display_mode = hanlde_attribute("bam_display_mode", bam_display_mode, alignment_files, "alignment files")
         bam_hide_small_indels = hanlde_attribute("bam_hide_small_indels", bam_hide_small_indels, alignment_files, "alignment files")
         bam_small_indel_threshold = hanlde_attribute("bam_small_indel_threshold", bam_small_indel_threshold, alignment_files, "alignment files")
@@ -170,6 +172,7 @@ def generate_igv_session(
     # Allignment files
     bam_group_by_cycle = cycle(bam_group_by)
     bam_color_by_cycle = cycle(bam_color_by)
+    bam_color_by_tag_cycle = cycle(bam_color_by_tag)
     bam_display_mode_cycle = cycle(bam_display_mode)
     bam_hide_small_indels_cycle = cycle(bam_hide_small_indels)
     bam_small_indel_threshold_cycle = cycle(bam_small_indel_threshold)
@@ -202,6 +205,7 @@ def generate_igv_session(
                     height=height,
                     group_by=next(bam_group_by_cycle),
                     color_by=next(bam_color_by_cycle),
+                    color_by_tag=next(bam_color_by_tag_cycle),
                     hide_small_indels=next(bam_hide_small_indels_cycle),
                     small_indel_threshold=next(bam_small_indel_threshold_cycle),
                     display_mode=next(bam_display_mode_cycle),

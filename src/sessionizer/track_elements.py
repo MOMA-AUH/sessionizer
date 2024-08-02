@@ -50,7 +50,6 @@ class AllignmentColorByOption(str, Enum):
     ZMW = "zmw"
     BISULFITE = "bisulfite"
     NOMESEQ = "nomeseq"
-    TAG = "tag"
     UNEXPECTED_PAIR = "unexpected_pair"
     MAPPED_SIZE = "mapped_size"
     LINK_STRAND = "link_strand"
@@ -63,6 +62,7 @@ class AllignmentColorByOption(str, Enum):
     SMRT_CCS_FWD_PW = "smrt_ccs_fwd_pw"
     SMRT_CCS_REV_IPD = "smrt_ccs_rev_ipd"
     SMRT_CCS_REV_PW = "smrt_ccs_rev_pw"
+    TAG = "tag"  # Special case - needs to be acompained by tag value
 
     def __str__(self):
         return self.value
@@ -122,6 +122,7 @@ class DataTrack:
 class AllignmentTrack(DataTrack):
     group_by: AllignmentGroupByOption
     color_by: AllignmentColorByOption
+    color_by_tag: str
     display_mode: AllignmentDisplayModeOption
 
     hide_small_indels: bool
@@ -159,6 +160,8 @@ class AllignmentTrack(DataTrack):
             "RenderOptions",
         )
         render_options.set("colorOption", str(self.color_by.name))
+        if self.color_by == AllignmentColorByOption.TAG:
+            render_options.set("colorByTag", self.color_by_tag)
         render_options.set("groupByOption", str(self.group_by.name))
         render_options.set("hideSmallIndels", str(self.hide_small_indels).lower())
         render_options.set("smallIndelThreshold", str(self.small_indel_threshold))
