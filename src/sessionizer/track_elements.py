@@ -6,7 +6,7 @@ from pathlib import Path
 from sessionizer.colors import RGBColorOption
 
 
-class AllignmentGroupByOption(str, Enum):
+class AlignmentGroupByOption(str, Enum):
     # IGVNAME = "toolname"
     STRAND = "strand"
     SAMPLE = "sample"
@@ -33,7 +33,7 @@ class AllignmentGroupByOption(str, Enum):
         return self.value
 
 
-class AllignmentColorByOption(str, Enum):
+class AlignmentColorByOption(str, Enum):
     # See full list of options here: https://github.com/igvteam/igv/blob/3a1511c73af1d8eaa31e8fb4058c72314da8157e/src/main/java/org/broad/igv/sam/AlignmentTrack.java#L95
     # IGVNAME = "toolname"
     NONE = "none"
@@ -68,7 +68,7 @@ class AllignmentColorByOption(str, Enum):
         return self.value
 
 
-class AllignmentDisplayModeOption(str, Enum):
+class AlignmentDisplayModeOption(str, Enum):
     EXPANDED = "expanded"
     COLLAPSED = "collapsed"
     SQUISHED = "squished"
@@ -119,11 +119,11 @@ class DataTrack:
 
 
 @dataclass
-class AllignmentTrack(DataTrack):
-    group_by: AllignmentGroupByOption
-    color_by: AllignmentColorByOption
+class AlignmentTrack(DataTrack):
+    group_by: AlignmentGroupByOption
+    color_by: AlignmentColorByOption
     color_by_tag: str
-    display_mode: AllignmentDisplayModeOption
+    display_mode: AlignmentDisplayModeOption
 
     hide_small_indels: bool
     small_indel_threshold: int
@@ -160,7 +160,7 @@ class AllignmentTrack(DataTrack):
             "RenderOptions",
         )
         render_options.set("colorOption", str(self.color_by.name))
-        if self.color_by == AllignmentColorByOption.TAG:
+        if self.color_by == AlignmentColorByOption.TAG:
             render_options.set("colorByTag", self.color_by_tag)
         render_options.set("groupByOption", str(self.group_by.name))
         render_options.set("hideSmallIndels", str(self.hide_small_indels).lower())

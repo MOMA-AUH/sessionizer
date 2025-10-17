@@ -5,13 +5,18 @@ from typing import List
 from xml.dom import minidom
 
 from sessionizer.colors import RGBColorOption
-from sessionizer.filetypes import ALIGNMENT_SUFFIXES, BIGWIG_SUFFIXES, GTF_SUFFIXES, VCF_SUFFIXES
+from sessionizer.filetypes import (
+    ALIGNMENT_SUFFIXES,
+    BIGWIG_SUFFIXES,
+    GTF_SUFFIXES,
+    VCF_SUFFIXES,
+)
 from sessionizer.genomes import GENOME
 from sessionizer.track_elements import (
-    AllignmentColorByOption,
-    AllignmentDisplayModeOption,
-    AllignmentGroupByOption,
-    AllignmentTrack,
+    AlignmentColorByOption,
+    AlignmentDisplayModeOption,
+    AlignmentGroupByOption,
+    AlignmentTrack,
     BigWigPlotTypeOption,
     BigWigRangeOption,
     BigWigTrack,
@@ -25,7 +30,9 @@ from sessionizer.utils import filter_files_by_filetype
 
 def hanlde_attribute(attribute: str, values: List, files: List, file_type: str) -> List:
     if len(values) not in [len(files), 1]:
-        raise ValueError(f"Length of {attribute} ({len(values)}) must be 1 or equal to the number of {file_type} ({len(files)}).")
+        raise ValueError(
+            f"Length of {attribute} ({len(values)}) must be 1 or equal to the number of {file_type} ({len(files)})."
+        )
     return values * len(files) if len(values) == 1 else values
 
 
@@ -101,10 +108,10 @@ def generate_igv_session(
     heights: List[int],
     genome: GENOME,
     genome_path: Path,
-    bam_group_by: List[AllignmentGroupByOption],
-    bam_color_by: List[AllignmentColorByOption],
+    bam_group_by: List[AlignmentGroupByOption],
+    bam_color_by: List[AlignmentColorByOption],
     bam_color_by_tag: List[str],
-    bam_display_mode: List[AllignmentDisplayModeOption],
+    bam_display_mode: List[AlignmentDisplayModeOption],
     bam_hide_small_indels: List[bool],
     bam_small_indel_threshold: List[int],
     bam_show_coverage: List[bool],
@@ -124,7 +131,9 @@ def generate_igv_session(
     # Check if the lengths of file lists and names lists are equal
     if len(files) != len(names):
         # Check if the lengths of file lists and names lists are equal
-        raise ValueError(f"Length of files ({len(files)}) and names ({len(names)}) must be equal.")
+        raise ValueError(
+            f"Length of files ({len(files)}) and names ({len(names)}) must be equal."
+        )
     # Convert empty strings to file names
     names = [file.name if name == "" else name for file, name in zip(files, names)]
 
@@ -132,19 +141,43 @@ def generate_igv_session(
         heights = [0] * len(files)
     if len(files) != len(heights):
         # Check if the lengths of file lists and heights lists are equal
-        raise ValueError(f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal.")
+        raise ValueError(
+            f"Length of files ({len(files)}) and heights ({len(heights)}) must be equal."
+        )
 
     # Hanlde bam/cram specific arguments
     alignment_files = filter_files_by_filetype(files, ALIGNMENT_SUFFIXES)
     if alignment_files:
-        bam_group_by = hanlde_attribute("bam_group_by", bam_group_by, alignment_files, "alignment files")
-        bam_color_by = hanlde_attribute("bam_color_by", bam_color_by, alignment_files, "alignment files")
-        bam_color_by_tag = hanlde_attribute("bam_color_by_tag", bam_color_by_tag, alignment_files, "alignment files")
-        bam_display_mode = hanlde_attribute("bam_display_mode", bam_display_mode, alignment_files, "alignment files")
-        bam_hide_small_indels = hanlde_attribute("bam_hide_small_indels", bam_hide_small_indels, alignment_files, "alignment files")
-        bam_small_indel_threshold = hanlde_attribute("bam_small_indel_threshold", bam_small_indel_threshold, alignment_files, "alignment files")
-        bam_show_coverage = hanlde_attribute("bam_show_coverage", bam_show_coverage, alignment_files, "alignment files")
-        bam_show_junctions = hanlde_attribute("bam_show_junctions", bam_show_junctions, alignment_files, "alignment files")
+        bam_group_by = hanlde_attribute(
+            "bam_group_by", bam_group_by, alignment_files, "alignment files"
+        )
+        bam_color_by = hanlde_attribute(
+            "bam_color_by", bam_color_by, alignment_files, "alignment files"
+        )
+        bam_color_by_tag = hanlde_attribute(
+            "bam_color_by_tag", bam_color_by_tag, alignment_files, "alignment files"
+        )
+        bam_display_mode = hanlde_attribute(
+            "bam_display_mode", bam_display_mode, alignment_files, "alignment files"
+        )
+        bam_hide_small_indels = hanlde_attribute(
+            "bam_hide_small_indels",
+            bam_hide_small_indels,
+            alignment_files,
+            "alignment files",
+        )
+        bam_small_indel_threshold = hanlde_attribute(
+            "bam_small_indel_threshold",
+            bam_small_indel_threshold,
+            alignment_files,
+            "alignment files",
+        )
+        bam_show_coverage = hanlde_attribute(
+            "bam_show_coverage", bam_show_coverage, alignment_files, "alignment files"
+        )
+        bam_show_junctions = hanlde_attribute(
+            "bam_show_junctions", bam_show_junctions, alignment_files, "alignment files"
+        )
 
         # If group_by_phase and color_by_methylation are not provided, set them to False
 
@@ -152,24 +185,41 @@ def generate_igv_session(
     bigwig_files = filter_files_by_filetype(files, BIGWIG_SUFFIXES)
     if bigwig_files:
         bw_color = hanlde_attribute("bw_color", bw_color, bigwig_files, "bigwig files")
-        bw_negative_color = hanlde_attribute("bw_negative_color", bw_negative_color, bigwig_files, "bigwig files")
-        bw_plot_type = hanlde_attribute("bw_plot_type", bw_plot_type, bigwig_files, "bigwig files")
-        bw_ranges = hanlde_attribute("bw_ranges", bw_ranges, bigwig_files, "bigwig files")
-        bw_auto_scale = hanlde_attribute("bw_auto_scale", bw_auto_scale, bigwig_files, "bigwig files")
+        bw_negative_color = hanlde_attribute(
+            "bw_negative_color", bw_negative_color, bigwig_files, "bigwig files"
+        )
+        bw_plot_type = hanlde_attribute(
+            "bw_plot_type", bw_plot_type, bigwig_files, "bigwig files"
+        )
+        bw_ranges = hanlde_attribute(
+            "bw_ranges", bw_ranges, bigwig_files, "bigwig files"
+        )
+        bw_auto_scale = hanlde_attribute(
+            "bw_auto_scale", bw_auto_scale, bigwig_files, "bigwig files"
+        )
 
     # Handle VCF specific arguments
     vcf_files = filter_files_by_filetype(files, VCF_SUFFIXES)
     if vcf_files:
-        vcf_show_genotypes = hanlde_attribute("vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files")
-        vcf_feature_visibility_window = hanlde_attribute("vcf_feature_visibility_window", vcf_feature_visibility_window, vcf_files, "vcf files")
+        vcf_show_genotypes = hanlde_attribute(
+            "vcf_show_genotypes", vcf_show_genotypes, vcf_files, "vcf files"
+        )
+        vcf_feature_visibility_window = hanlde_attribute(
+            "vcf_feature_visibility_window",
+            vcf_feature_visibility_window,
+            vcf_files,
+            "vcf files",
+        )
 
     # Handle GTF specific arguments
     gtf_files = filter_files_by_filetype(files, GTF_SUFFIXES)
     if gtf_files:
-        gtf_display_mode = hanlde_attribute("gtf_display_mode", gtf_display_mode, gtf_files, "gtf files")
+        gtf_display_mode = hanlde_attribute(
+            "gtf_display_mode", gtf_display_mode, gtf_files, "gtf files"
+        )
 
     # Cycles for attribute sublists
-    # Allignment files
+    # Alignment files
     bam_group_by_cycle = cycle(bam_group_by)
     bam_color_by_cycle = cycle(bam_color_by)
     bam_color_by_tag_cycle = cycle(bam_color_by_tag)
@@ -199,7 +249,7 @@ def generate_igv_session(
         if any(file.name.endswith(suffix) for suffix in ALIGNMENT_SUFFIXES):
             # Hanlde bam/cram specific arguments
             tracks.append(
-                AllignmentTrack(
+                AlignmentTrack(
                     name=name,
                     path=file,
                     height=height,
