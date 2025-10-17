@@ -232,3 +232,7 @@ class TestCreateIgvSession(unittest.TestCase):
             vcf_show_genotypes=[False],
             vcf_feature_visibility_window=[1000],
         )
+
+
+if __name__ == "__main__":
+    unittest.main()

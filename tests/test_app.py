@@ -378,4 +378,10 @@ class TestAppBigWig(unittest.TestCase):
         )
         assert result.exit_code == 0
         assert f'color="{RGBColorOption.RED.rgb_values()}"' in self.output.read_text()
-        assert f'altColor="{RGBColorOption.BLUE.rgb_values()}"' in self.output.read_text()
+        assert (
+            f'altColor="{RGBColorOption.BLUE.rgb_values()}"' in self.output.read_text()
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
