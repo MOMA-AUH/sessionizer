@@ -98,3 +98,7 @@ class TestBigWigRangeParser(unittest.TestCase):
         assert result.minimum == 1
         assert result.baseline == 1
         assert result.maximum == 7
+
+
+if __name__ == "__main__":
+    unittest.main()

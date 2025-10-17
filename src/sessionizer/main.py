@@ -8,9 +8,9 @@ from sessionizer.colors import RGBColorOption
 from sessionizer.create_igv_session import generate_igv_session
 from sessionizer.genomes import GENOME
 from sessionizer.track_elements import (
-    AllignmentColorByOption,
-    AllignmentDisplayModeOption,
-    AllignmentGroupByOption,
+    AlignmentColorByOption,
+    AlignmentDisplayModeOption,
+    AlignmentGroupByOption,
     BigWigPlotTypeOption,
     BigWigRangeOption,
     GtfDisplayModeOption,
@@ -94,19 +94,19 @@ def run(
     ] = [0],
     # Alignment options
     bam_group_by: Annotated[
-        List[AllignmentGroupByOption],
+        List[AlignmentGroupByOption],
         typer.Option(
             help="Parameter to group bams by.",
             rich_help_panel=ALIGNMENT_OPTIONS,
         ),
-    ] = [AllignmentGroupByOption.NONE],
+    ] = [AlignmentGroupByOption.NONE],
     bam_color_by: Annotated[
-        List[AllignmentColorByOption],
+        List[AlignmentColorByOption],
         typer.Option(
             help="Parameter to color bams by.",
             rich_help_panel=ALIGNMENT_OPTIONS,
         ),
-    ] = [AllignmentColorByOption.NONE],
+    ] = [AlignmentColorByOption.NONE],
     bam_color_by_tag: Annotated[
         List[str],
         typer.Option(
@@ -115,12 +115,12 @@ def run(
         ),
     ] = [""],
     bam_display_mode: Annotated[
-        List[AllignmentDisplayModeOption],
+        List[AlignmentDisplayModeOption],
         typer.Option(
             help="Parameter to display mode for bams.",
             rich_help_panel=ALIGNMENT_OPTIONS,
         ),
-    ] = [AllignmentDisplayModeOption.COLLAPSED],
+    ] = [AlignmentDisplayModeOption.COLLAPSED],
     bam_hide_small_indels: Annotated[
         List[bool],
         typer.Option(
@@ -157,9 +157,7 @@ def run(
             rich_help_panel=BIGWIG_OPTIONS,
             parser=bw_range_parser,
         ),
-    ] = [
-        "0,0,10"
-    ],  # type: ignore
+    ] = ["0,0,10"],  # type: ignore
     bw_color: Annotated[
         List[RGBColorOption],
         typer.Option(
@@ -237,10 +235,14 @@ def run(
 
     # If use_relative_paths is True, create paths to the input files relative to the output file
     if use_relative_paths:
-        file = [Path(f).relative_to(output.parent.absolute(), walk_up=True) for f in file]
+        file = [
+            Path(f).relative_to(output.parent.absolute(), walk_up=True) for f in file
+        ]
 
         if genome_path is not None:
-            genome_path = Path(genome_path).relative_to(output.parent.absolute(), walk_up=True)
+            genome_path = Path(genome_path).relative_to(
+                output.parent.absolute(), walk_up=True
+            )
 
     # Check genome_path is given if genome is set to custom
     if genome_path is None:
