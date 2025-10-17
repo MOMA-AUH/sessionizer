@@ -94,6 +94,7 @@ class DataTrack:
     name: str
     path: Path
     height: int
+    clazz: str = field(default="org.broad.igv.track.DataSourceTrack")
 
     file_type: str = field(init=False)
 
@@ -110,6 +111,7 @@ class DataTrack:
             session_panel,
             "Track",
             name=self.name,
+            clazz=self.clazz,
             id=str(self.path),
         )
         if self.height != 0:
@@ -120,6 +122,8 @@ class DataTrack:
 
 @dataclass
 class AlignmentTrack(DataTrack):
+    clazz: str = field(default="org.broad.igv.sam.AlignmentTrack", init=False)
+
     group_by: AlignmentGroupByOption
     color_by: AlignmentColorByOption
     color_by_tag: str
@@ -136,6 +140,7 @@ class AlignmentTrack(DataTrack):
         ET.SubElement(
             session_panel,
             "Track",
+            clazz="org.broad.igv.sam.CoverageTrack",
             id=f"{self.path}_coverage",
             visible=str(self.show_coverage).lower(),
         )
@@ -144,6 +149,7 @@ class AlignmentTrack(DataTrack):
         ET.SubElement(
             session_panel,
             "Track",
+            clazz="org.broad.igv.sam.SpliceJunctionTrack",
             id=f"{self.path}_junctions",
             visible=str(self.show_junctions).lower(),
         )
@@ -190,6 +196,8 @@ class BigWigTrack(DataTrack):
 
     """
 
+    clazz: str = field(default="org.broad.igv.track.DataSourceTrack", init=False)
+
     plot_type: BigWigPlotTypeOption
     range: BigWigRangeOption
     color: RGBColorOption
@@ -228,6 +236,8 @@ class BigWigTrack(DataTrack):
 
 @dataclass
 class VariantTrack(DataTrack):
+    clazz: str = field(default="org.broad.igv.variant.VariantTrack", init=False)
+
     show_genotypes: bool
     feature_visibility_window: int
 
@@ -253,6 +263,8 @@ class GtfDisplayModeOption(str, Enum):
 
 @dataclass
 class GtfTrack(DataTrack):
+    clazz: str = field(default="org.broad.igv.track.FeatureTrack", init=False)
+
     display_mode: GtfDisplayModeOption
 
     def add_track(self, session_panel: ET.Element):

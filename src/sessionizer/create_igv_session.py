@@ -65,6 +65,7 @@ def generate_xml(genome: GENOME, genome_path: Path, tracks: List[DataTrack]) -> 
     ET.SubElement(
         feature_panel,
         "Track",
+        clazz="org.broad.igv.track.SequenceTrack",
         id="Reference sequence",
         name="Reference sequence",
     )
@@ -88,6 +89,7 @@ def generate_xml(genome: GENOME, genome_path: Path, tracks: List[DataTrack]) -> 
             ET.SubElement(
                 feature_panel,
                 "Track",
+                clazz="org.broad.igv.track.FeatureTrack",
                 id=gene_id,
             )
 
